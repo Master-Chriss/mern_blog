@@ -13,7 +13,12 @@ const port = process.env.PORT;
 const DB_URL = process.env.DB_URL;
 
 // Middleware
-app.use(cors({ credentials: true, origin: 'http://localhost:5173' }));
+app.use(
+	cors({
+		credentials: true,
+		origin: ['http://localhost:5173', 'https://mern-blog.vercel.app'],
+	}),
+);
 app.use(express.json());
 app.use(cookieParser());
 

@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#0f172a] min-h-screen text-slate-100 selection:bg-cyan-500/30;
+    /* Animated Gradient Background */
+    background: radial-gradient(circle at 0% 0%, #1e293b 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, #312e81 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%);
+  }
+}
+
+/* Makes the toolbar border and icons visible on dark backgrounds */
+.ql-toolbar.ql-snow {
+  border-color: #4b5563 !important; /* gray-600 */
+  background-color: #1f2937;       /* gray-800 */
+}
+
+.ql-container.ql-snow {
+  border-color: #4b5563 !important;
+}
+
+/* Makes the text inside the editor white */
+.ql-editor {
+  color: white;
+  min-height: 400px;
+}
+
+/* Makes toolbar icons white */
+.ql-snow .ql-stroke {
+  stroke: #ffffff !important;
+}
+.ql-snow .ql-fill {
+  fill: #ffffff !important;
+}
+.ql-snow .ql-picker {
+  color: #ffffff !important;
+}
+
+/* Target the container where you render the post content */
+.post-content p {
+  margin-top: 5px;    /* Reduced from browser default */
+  margin-bottom: 5px; /* Reduced from browser default */
+  line-height: 1.2;   /* Improves readability without huge gaps */
+}
+
+/* If you have empty paragraphs, hide them or minimize them */
+.post-content p:empty {
+  display: none;
+}
+
+

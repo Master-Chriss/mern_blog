@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import ReactQuill from 'react-quill-new';
-import 'react-quill-new/dist/quill.snow.css';
+import QuillEditor from '../QuillEditor';
 
 export default function EditPage() {
 	const { id } = useParams();
@@ -129,7 +128,7 @@ export default function EditPage() {
 
 				{/* Editor Container */}
 				<div className="bg-[#1a1b4b]/40 border border-white/5 rounded-[2.5rem] overflow-hidden backdrop-blur-sm">
-					<ReactQuill
+					<QuillEditor
 						theme="snow"
 						value={content}
 						onChange={(newValue) => setContent(newValue)}

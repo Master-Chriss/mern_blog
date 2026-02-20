@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import ReactQuill from 'react-quill-new';
-import 'react-quill-new/dist/quill.snow.css';
+import QuillEditor from '../QuillEditor'
 
 export default function CreatePost() {
 	const [title, setTitle] = useState('');
@@ -96,8 +95,8 @@ export default function CreatePost() {
 				</div>
 
 				{/* The Editor Panel */}
-				<div className="glass-editor rounded-3xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-md">
-					<ReactQuill
+				<div className="glass-editor rounded-3xl overflow-hidden border border-white/10 bg-grey-200 backdrop-blur-md">
+					<QuillEditor
 						value={content}
 						onChange={(newValue) => setContent(newValue)}
 						theme="snow"

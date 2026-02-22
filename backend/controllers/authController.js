@@ -49,11 +49,17 @@ export const login = async (req, res) => {
 		{},
 		(err, token) => {
 			if (err) throw err;
-			res.cookie('token', token, { httpOnly: true }).json({
-				id: user._id,
-				username: user.username,
-				role: user.role,
-			});
+			res
+				.cookie('token', token, {
+					httpOnly: true,
+					sameSite: 'none', // Allows the cookie to be sent across different domains (Vercel to Render)
+					secure: true,
+				})
+				.json({
+					id: user._id,
+					username: user.username,
+					role: user.role,
+				});
 		},
 	);
 };

@@ -7,6 +7,8 @@ import {
   FaEdit, FaTrash, FaUserCog
 } from 'react-icons/fa';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 const AdminDashboard = () => {
   const { userInfo } = useContext(UserContext);
   const [users, setUsers] = useState([]);
@@ -25,7 +27,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     // Fetch all posts
-    fetch('http://localhost:4000/post')
+    fetch(`${API_URL}/post`)
       .then(res => res.json())
       .then(data => {
         setPosts(data);
@@ -33,7 +35,7 @@ const AdminDashboard = () => {
       });
 
     // You'll need a backend endpoint to get all users
-    fetch('http://localhost:4000/auth/users', {
+    fetch(`${API_URL}/auth/users`, {
       credentials: 'include'
     })
       .then(res => res.json())
@@ -52,7 +54,7 @@ const AdminDashboard = () => {
 
   const updateUserRole = async (userId, newRole) => {
     try {
-      const response = await fetch(`http://localhost:4000/auth/user/${userId}`, {
+      const response = await fetch(`${API_URL}/auth/user/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: newRole }),
@@ -75,7 +77,7 @@ const AdminDashboard = () => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
     
     try {
-      const response = await fetch(`http://localhost:4000/auth/user/${userId}`, {
+      const response = await fetch(`${API_URL}/auth/user/${userId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -92,7 +94,7 @@ const AdminDashboard = () => {
     if (!window.confirm('Delete this post?')) return;
     
     try {
-      const response = await fetch(`http://localhost:4000/post/${postId}`, {
+      const response = await fetch(`${API_URL}/post/${postId}`, {
         method: 'DELETE',
         credentials: 'include'
       });

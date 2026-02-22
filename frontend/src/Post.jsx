@@ -1,6 +1,8 @@
 import { formatISO9075 } from 'date-fns';
 import { Link } from 'react-router-dom';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 // Make sure 'content' is included in the props here!
 export default function Post({
 	_id,
@@ -24,7 +26,7 @@ export default function Post({
 	const coverUrl = cover
 		? cover.startsWith('http')
 			? cover
-			: `http://localhost:4000/${cover.replace(/\\/g, '/')}`
+			: `${API_URL}/${cover.replace(/\\/g, '/')}`
 		: '';
 
 	return (

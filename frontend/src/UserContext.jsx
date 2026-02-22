@@ -1,4 +1,5 @@
 import { createContext, useEffect, useState } from 'react';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 // 1. Create the Context object
 export const UserContext = createContext({});
@@ -10,7 +11,7 @@ export function UserContextProvider({ children }) {
 
 	useEffect(() => {
 		// This runs once when the app starts or the page is refreshed
-		fetch('http://localhost:4000/auth/profile', {
+		fetch(`${API_URL}/auth/profile`, {
 			credentials: 'include', // Crucial: Sends the JWT cookie to the backend
 		})
 			.then((response) => {

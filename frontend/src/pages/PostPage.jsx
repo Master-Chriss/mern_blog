@@ -6,6 +6,8 @@ import { FaEdit, FaChevronLeft, FaTrashAlt } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import DOMPurify from 'dompurify';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 const PostPage = () => {
 	const [postInfo, setPostInfo] = useState(null);
 	const [showModal, setShowModal] = useState(false);
@@ -23,7 +25,7 @@ const PostPage = () => {
 	const canDelete = isAdmin;
 
 	useEffect(() => {
-		fetch(`http://localhost:4000/post/${id}`).then((response) => {
+		fetch(`${API_URL}/post/${id}`).then((response) => {
 			response.json().then((info) => setPostInfo(info));
 		});
 	}, [id]);
@@ -31,7 +33,7 @@ const PostPage = () => {
 	const confirmDelete = async () => {
 		setIsDeleting(true);
 		try {
-			const response = await fetch(`http://localhost:4000/post/${id}`, {
+			const response = await fetch(`${API_URL}/post/${id}`, {
 				method: 'DELETE',
 				credentials: 'include',
 			});
@@ -58,7 +60,7 @@ const PostPage = () => {
 	const coverUrl = postInfo?.cover
 		? postInfo.cover.startsWith('http')
 			? postInfo.cover
-			: `http://localhost:4000/${postInfo.cover.replace(/\\/g, '/')}`
+			: `${API_URL}/${postInfo.cover.replace(/\\/g, '/')}`
 		: '';
 
 	return (

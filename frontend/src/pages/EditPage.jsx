@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import QuillEditor from '../QuillEditor';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 export default function EditPage() {
 	const { id } = useParams();
 	const [title, setTitle] = useState('');
@@ -14,7 +16,7 @@ export default function EditPage() {
 
 	useEffect(() => {
 		setLoading(true);
-		fetch(`http://localhost:4000/post/${id}`)
+		fetch(`${API_URL}/post/${id}`)
 			.then((response) => {
 				if (!response.ok) {
 					throw new Error(`HTTP error! status: ${response.status}`);
@@ -46,7 +48,7 @@ export default function EditPage() {
 		if (files?.[0]) data.set('file', files?.[0]);
 
 		try {
-			const response = await fetch(`http://localhost:4000/post/${id}`, {
+			const response = await fetch(`${API_URL}/post/${id}`, {
 				method: 'PUT',
 				body: data,
 				credentials: 'include',

@@ -11,13 +11,15 @@ import {
 	FaUserCircle,
 } from 'react-icons/fa';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 const Header = () => {
 	const { setUserInfo, userInfo } = useContext(UserContext);
 	const [searchQuery, setSearchQuery] = useState('');
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		fetch('http://localhost:4000/auth/profile', {
+		fetch(`${API_URL}/auth/profile`, {
 			credentials: 'include',
 		}).then((response) => {
 			response.json().then((userInfo) => {
@@ -27,7 +29,7 @@ const Header = () => {
 	}, []);
 
 	const logout = () => {
-		fetch('http://localhost:4000/auth/logout', {
+		fetch(`${API_URL}/auth/logout`, {
 			credentials: 'include',
 			method: 'POST',
 		});

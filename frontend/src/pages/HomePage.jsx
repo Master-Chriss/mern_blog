@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import Post from '../Post';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 const HomePage = () => {
 	const [posts, setPosts] = useState([]);
 	const [searchQuery, setSearchQuery] = useState('');
@@ -15,7 +17,7 @@ const HomePage = () => {
 	}, [location.search]);
 
 	useEffect(() => {
-		fetch('http://localhost:4000/post').then((response) => {
+		fetch(`${API_URL}/post`).then((response) => {
 			response.json().then((posts) => {
 				setPosts(posts);
 			});

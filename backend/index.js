@@ -16,7 +16,7 @@ const DB_URL = process.env.DB_URL;
 app.use(
 	cors({
 		credentials: true,
-		origin: ['http://localhost:5173', 'https://new-gen-blog.vercel.app'],
+		origin: 'https://new-gen-blog.vercel.app',
 	}),
 );
 app.use(express.json());

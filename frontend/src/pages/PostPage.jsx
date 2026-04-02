@@ -121,7 +121,7 @@ const PostPage = () => {
 			</Link>
 
 			<header className="mb-10">
-				<h1 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tight leading-tight">
+				<h1 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tight leading-tight break-words">
 					{postInfo.title}
 				</h1>
 
@@ -139,7 +139,6 @@ const PostPage = () => {
 					</div>
 
 					<div className="flex items-center gap-6">
-						{/* Edit - available to actual post author OR admin */}
 						{canEdit && (
 							<Link
 								to={`/edit/${postInfo._id}`}
@@ -149,7 +148,6 @@ const PostPage = () => {
 							</Link>
 						)}
 
-						{/* Delete - admin only */}
 						{canDelete && (
 							<button
 								onClick={() => setShowModal(true)}
@@ -178,9 +176,22 @@ const PostPage = () => {
 					<div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] to-transparent" />
 				</div>
 
-				<div className="p-8 md:p-16">
+				{/* FIXED CONTENT AREA - No more cutting off */}
+				<div className="p-6 md:p-12 lg:p-16">
 					<div
-						className="post-content prose prose-invert prose-cyan max-w-none text-slate-300 text-lg leading-relaxed"
+						className="post-content prose prose-invert prose-cyan max-w-none 
+								  text-slate-300 text-base md:text-lg leading-relaxed
+								  prose-p:mb-4 prose-p:mt-0 prose-p:break-words
+								  prose-headings:text-white prose-headings:font-bold prose-headings:mb-4 prose-headings:mt-6
+								  prose-h1:text-3xl md:prose-h1:text-4xl prose-h1:mb-6
+								  prose-h2:text-2xl md:prose-h2:text-3xl prose-h2:mb-4
+								  prose-h3:text-xl md:prose-h3:text-2xl
+								  prose-a:text-cyan-400 prose-a:break-words
+								  prose-ul:my-4 prose-ol:my-4
+								  prose-li:my-1
+								  prose-img:rounded-2xl prose-img:my-6 prose-img:max-w-full
+								  prose-blockquote:border-l-cyan-500 prose-blockquote:pl-4 prose-blockquote:italic
+								  break-words overflow-x-auto"
 						dangerouslySetInnerHTML={{ __html: cleanHTML }}
 					/>
 				</div>

@@ -51,4 +51,28 @@
   display: none;
 }
 
+.post-content iframe {
+  display: block;
+  width: min(100%, 720px);
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  max-height: 420px;
+  border: 0;
+  border-radius: 1rem;
+  margin: 1.5rem auto;
+}
+
+.post-content img,
+.post-content video {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 420px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 1rem;
+  margin: 1.5rem auto;
+}
+
 

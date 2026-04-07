@@ -130,7 +130,7 @@ const PostPage = () => {
 						<div className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-purple-600 shadow-lg" />
 						<div>
 							<p className="text-white font-bold leading-none">
-								@{postInfo?.author?.username || 'Anonymous'}
+								@{postInfo?.author?.username || 'Anonymous'} - The Blogger
 							</p>
 							<time className="text-xs text-slate-500">
 								{formatISO9075(new Date(postInfo.createdAt))}
@@ -162,17 +162,17 @@ const PostPage = () => {
 				</div>
 			</header>
 
-			<div className="rounded-[2.5rem] overflow-hidden bg-white/5 border border-white/10 shadow-2xl backdrop-blur-2xl">
-				<div className="h-[400px] md:h-[500px] w-full relative">
-					{coverUrl ? (
-						<img
-							src={coverUrl}
-							className="w-full h-full object-cover"
-							alt={postInfo.title}
-						/>
-					) : (
-						<div className="w-full h-full bg-slate-800/60" />
-					)}
+				<div className="rounded-[2.5rem] overflow-hidden bg-white/5 border border-white/10 shadow-2xl backdrop-blur-2xl">
+					<div className="relative w-full aspect-[4/3] sm:aspect-[16/10] md:aspect-auto md:h-[500px] bg-slate-900/60">
+						{coverUrl ? (
+							<img
+								src={coverUrl}
+								className="w-full h-full object-contain md:object-cover"
+								alt={postInfo.title}
+							/>
+						) : (
+							<div className="w-full h-full bg-slate-800/60" />
+						)}
 					<div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] to-transparent" />
 				</div>
 

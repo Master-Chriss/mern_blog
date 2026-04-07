@@ -4,6 +4,35 @@ const QuillEditor = ({ value, onChange }) => {
 	const quillRef = useRef(null);
 
 	useEffect(() => {
+		const applyToolbarTitles = (toolbarEl) => {
+			if (!toolbarEl) return;
+
+			const titleMap = {
+				'.ql-header': 'Heading size',
+				'.ql-bold': 'Bold',
+				'.ql-italic': 'Italic',
+				'.ql-underline': 'Underline',
+				'.ql-strike': 'Strikethrough',
+				'.ql-color': 'Text color',
+				'.ql-background': 'Background color',
+				'.ql-list[value="ordered"]': 'Numbered list',
+				'.ql-list[value="bullet"]': 'Bullet list',
+				'.ql-link': 'Insert link',
+				'.ql-image': 'Insert image',
+				'.ql-video': 'Insert video',
+				'.ql-code-block': 'Code block',
+				'.ql-clean': 'Clear formatting',
+			};
+
+			Object.entries(titleMap).forEach(([selector, title]) => {
+				const element = toolbarEl.querySelector(selector);
+				if (element) {
+					element.setAttribute('title', title);
+					element.setAttribute('aria-label', title);
+				}
+			});
+		};
+
 		// Load Quill CSS
 		const link = document.createElement('link');
 		link.rel = 'stylesheet';
@@ -26,10 +55,33 @@ const QuillEditor = ({ value, onChange }) => {
         font-size: 16px !important;
       }
       
-      .ql-editor {
-        color: #e2e8f0 !important;
-        min-height: 350px;
-      }
+	      .ql-editor {
+	        color: #e2e8f0 !important;
+	        min-height: 350px;
+	      }
+
+	      .ql-editor img,
+	      .ql-editor video,
+	      .ql-editor iframe {
+	        display: block;
+	        width: min(100%, 720px) !important;
+	        max-width: 100%;
+	        margin: 1rem auto;
+	        border-radius: 12px;
+	      }
+
+	      .ql-editor img,
+	      .ql-editor video {
+	        max-height: 420px;
+	        height: auto !important;
+	        object-fit: contain;
+	      }
+
+	      .ql-editor iframe {
+	        aspect-ratio: 16 / 9;
+	        max-height: 420px;
+	        height: auto !important;
+	      }
       
       .ql-editor.ql-blank::before {
         color: #64748b !important;
@@ -88,15 +140,19 @@ const QuillEditor = ({ value, onChange }) => {
 							['bold', 'italic', 'underline', 'strike'],
 							[{ color: [] }, { background: [] }],
 							[{ list: 'ordered' }, { list: 'bullet' }],
-							['link', 'image', 'code-block'],
+							['link', 'image', 'video', 'code-block'],
 							['clean'],
 						],
 					},
-				});
+					});
 
-				if (value) {
-					quillRef.current.root.innerHTML = value;
-				}
+					applyToolbarTitles(
+						quillRef.current.getModule('toolbar')?.container
+					);
+
+					if (value) {
+						quillRef.current.root.innerHTML = value;
+					}
 
 				quillRef.current.on('text-change', () => {
 					onChange(quillRef.current.root.innerHTML);

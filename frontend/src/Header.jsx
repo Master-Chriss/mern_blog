@@ -11,7 +11,9 @@ import {
 	FaUserCircle,
 	FaBars,
 	FaTimes,
+	FaTachometerAlt,
 } from 'react-icons/fa';
+import blogLogo from './assets/Logo/new-gen-logo-cropped.png';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -62,7 +64,7 @@ const Header = () => {
 								to="/"
 								className="text-xl sm:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400 whitespace-nowrap"
 								onClick={() => setMobileMenuOpen(false)}>
-								MCBlog
+								<img src={blogLogo} class="h-10 w-auto object-contain" alt="Logo" />
 							</Link>
 
 							{/* Desktop Search - Hidden on mobile */}
@@ -123,7 +125,8 @@ const Header = () => {
 								{userInfo?.role === 'admin' && (
 									<Link
 										to="/admin"
-										className="text-sm text-slate-300 hover:text-cyan-400">
+										className="text-sm text-green-800 font-bold hover:text-cyan-400">
+										<FaTachometerAlt class='inline mr-1' fill='green' />
 										Dashboard
 									</Link>
 								)}

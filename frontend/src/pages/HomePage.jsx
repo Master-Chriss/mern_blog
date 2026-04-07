@@ -42,10 +42,10 @@ const HomePage = () => {
 			{/* 1. Modern Hero Section */}
 			<section className="mb-20 text-center space-y-4">
 				<h1 className="text-3xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400">
-					Stories That Matter
+					Explore Our Latest Stories
 				</h1>
-				<p className="text-slate-400 text-3xl max-w-2xl mx-auto">
-					Technology, lifestyle, insights, entertainment and ideas. Fresh perspectives from curious minds of trained <span className="font-bold text-slate-50">Authors</span>  .
+				<p className="text-slate-400 text-xl max-w-2xl mx-auto">
+					Technology, lifestyle, insights, entertainment and ideas. Fresh perspectives from curious minds of our talented <span className="font-bold text-slate-50">Authors</span>  .
 				</p>
 			</section>
 

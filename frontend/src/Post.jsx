@@ -48,7 +48,7 @@ export default function Post({
 					{/* 2. PLACE UI HERE (Next to Author) */}
 					<div className="flex flex-col">
 						<span className="text-xs font-medium text-cyan-400 tracking-tighter">
-							@{author?.username}_The_Blogger
+							@{author?.username} - The Blogger
 						</span>
 						{/* Added Read Time here for a professional look */}
 						<div className="flex items-center gap-1 text-[10px] font-mono text-cyan-500/60 tracking-widest mt-1">

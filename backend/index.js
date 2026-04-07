@@ -18,16 +18,14 @@ app.use(
 		credentials: true,
 		origin: [
 			'http://localhost:5173',
-			'https://new-gen-blog.vercel.app',
-			'https://mern-blog-frontend-rosy.vercel.app',
+			'https://new-gen-latest-news.vercel.app',
 		],
 	}),
 );
+
+// Middlewares
 app.use(express.json());
 app.use(cookieParser());
-
-// NOTE: No more '/uploads' static middleware needed!
-// Cloudinary handles all image serving now
 
 // Use Routes
 app.use('/auth', authRoutes);

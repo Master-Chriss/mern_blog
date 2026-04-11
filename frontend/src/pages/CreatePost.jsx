@@ -10,6 +10,8 @@ export default function CreatePost() {
 	const [content, setContent] = useState('');
 	const [files, setFiles] = useState('');
 	const [redirect, setRedirect] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [error, setError] = useState('');
 
 	const modules = {
   toolbar: [
@@ -23,6 +25,20 @@ export default function CreatePost() {
 
 	const createPost = async (e) => {
 		e.preventDefault();
+		if (isSubmitting) return;
+
+		if (!title.trim() || !summary.trim() || !content.trim()) {
+			setError('Please fill in the title, summary, and article content before publishing.');
+			return;
+		}
+
+		if (!files?.[0]) {
+			setError('Please upload a cover image before publishing.');
+			return;
+		}
+
+		setIsSubmitting(true);
+		setError('');
 		const data = new FormData();
 		data.set('title', title);
 		data.set('summary', summary);
@@ -31,14 +47,25 @@ export default function CreatePost() {
 			data.set('file', files[0]);
 		}
 
-		const response = await fetch(`${API_URL}/post`, {
-			method: 'POST',
-			body: data,
-			credentials: 'include',
-		});
+		try {
+			const response = await fetch(`${API_URL}/post`, {
+				method: 'POST',
+				body: data,
+				credentials: 'include',
+			});
 
-		if (response.ok) {
-			setRedirect(true);
+			if (response.ok) {
+				setRedirect(true);
+				return;
+			}
+
+			const errorData = await response.json().catch(() => null);
+			setError(errorData?.message || 'Publishing failed. Please try again.');
+		} catch (error) {
+			console.error('Publish failed:', error);
+			setError('Network error while publishing. Please try again.');
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -46,7 +73,7 @@ export default function CreatePost() {
 
 	return (
 		<div className="max-w-5xl mx-auto py-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-			<form onSubmit={createPost} className="flex flex-col gap-6">
+				<form onSubmit={createPost} className="flex flex-col gap-6">
 				{/* Title Input - Oversized & Minimalist */}
 				<input
 					type="text"
@@ -56,7 +83,7 @@ export default function CreatePost() {
 					onChange={(ev) => setTitle(ev.target.value)}
 				/>
 
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 					{/* Summary - Glass Card */}
 					<div className="md:col-span-2 space-y-4">
 						<textarea
@@ -68,9 +95,9 @@ export default function CreatePost() {
 					</div>
 
 					{/* File Upload - Styled as a Dropzone */}
-					<div className="relative group h-32 md:h-full">
-						<label className="flex flex-col items-center justify-center w-full h-full rounded-3xl border-2 border-dashed border-white/10 bg-white/5 hover:bg-white/10 hover:border-cyan-500/50 transition-all cursor-pointer">
-							<div className="text-center">
+						<div className="relative group h-32 md:h-full">
+							<label className="flex flex-col items-center justify-center w-full h-full rounded-3xl border-2 border-dashed border-white/10 bg-white/5 hover:bg-white/10 hover:border-cyan-500/50 transition-all cursor-pointer">
+								<div className="text-center">
 								<svg
 									className="w-8 h-8 mx-auto text-slate-500 group-hover:text-cyan-400"
 									fill="none"
@@ -83,34 +110,50 @@ export default function CreatePost() {
 										d="M12 4v16m8-8H4"
 									/>
 								</svg>
-								<p className="mt-2 text-xs text-slate-500 uppercase tracking-widest group-hover:text-white">
-									Upload Cover
-								</p>
-							</div>
-							<input
-								type="file"
-								className="hidden"
-								onChange={(ev) => setFiles(ev.target.files)}
-							/>
-						</label>
+									<p className="mt-2 text-xs text-slate-500 uppercase tracking-widest group-hover:text-white">
+										{files?.[0] ? files[0].name : 'Upload Cover'}
+									</p>
+								</div>
+								<input
+									type="file"
+									className="hidden"
+									accept="image/*"
+									onChange={(ev) => {
+										setFiles(ev.target.files);
+										setError('');
+									}}
+								/>
+							</label>
+						</div>
 					</div>
-				</div>
 
 				{/* The Editor Panel */}
-				<div className="glass-editor rounded-3xl overflow-hidden border border-white/10 bg-grey-200 backdrop-blur-md">
-					<QuillEditor
-						value={content}
-						onChange={(newValue) => setContent(newValue)}
-						theme="snow"
-						modules={modules}
-						className="text-white min-h-[400px]"
-					/>
-				</div>
+					<div className="glass-editor rounded-3xl overflow-hidden border border-white/10 bg-grey-200 backdrop-blur-md">
+						<QuillEditor
+							value={content}
+							onChange={(newValue) => {
+								setContent(newValue);
+								if (error) setError('');
+							}}
+							theme="snow"
+							modules={modules}
+							className="text-white min-h-[400px]"
+						/>
+					</div>
 
-				<button className="self-end px-12 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(6,182,212,0.3)]">
-					Publish Article
-				</button>
-			</form>
-		</div>
-	);
+					{error && (
+						<p className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+							{error}
+						</p>
+					)}
+
+					<button
+						type="submit"
+						disabled={isSubmitting}
+						className="self-end px-12 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(6,182,212,0.3)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100">
+						{isSubmitting ? 'Publishing...' : 'Publish Article'}
+					</button>
+				</form>
+			</div>
+		);
 }

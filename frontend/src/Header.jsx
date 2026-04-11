@@ -34,13 +34,22 @@ const Header = () => {
 		});
 	}, []);
 
-	const logout = () => {
-		fetch(`${API_URL}/auth/logout`, {
-			credentials: 'include',
-			method: 'POST',
-		});
-		setUserInfo(null);
-		setMobileMenuOpen(false);
+	const logout = async () => {
+		try {
+			const response = await fetch(`${API_URL}/auth/logout`, {
+				credentials: 'include',
+				method: 'POST',
+			});
+
+			if (!response.ok) {
+				throw new Error('Logout failed');
+			}
+
+			setUserInfo(null);
+			setMobileMenuOpen(false);
+		} catch (error) {
+			console.error('Logout failed:', error);
+		}
 	};
 
 	const username = userInfo?.username;

@@ -7,28 +7,27 @@ dotenv.config();
 
 // Configure Cloudinary
 cloudinary.v2.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 // Helper function to extract public_id from Cloudinary URL
 const extractPublicIdFromUrl = (url) => {
-  if (!url || !url.includes('cloudinary')) return null;
-  
-  try {
-    // Cloudinary URL format: https://res.cloudinary.com/cloud_name/image/upload/v12345/folder/filename.jpg
-    const urlParts = url.split('/');
-    const filenameWithVersion = urlParts[urlParts.length - 1]; // v12345_filename.jpg
-    const filename = filenameWithVersion.split('_').pop(); // filename.jpg
-    const publicId = `blog-images/${filename.split('.')[0]}`; // blog-images/filename
-    return publicId;
-  } catch (error) {
-    console.error('Error extracting public_id:', error);
-    return null;
-  }
-};
+	if (!url || !url.includes('cloudinary')) return null;
 
+	try {
+		// Cloudinary URL format: https://res.cloudinary.com/cloud_name/image/upload/v12345/folder/filename.jpg
+		const urlParts = url.split('/');
+		const filenameWithVersion = urlParts[urlParts.length - 1]; // v12345_filename.jpg
+		const filename = filenameWithVersion.split('_').pop(); // filename.jpg
+		const publicId = `blog-images/${filename.split('.')[0]}`; // blog-images/filename
+		return publicId;
+	} catch (error) {
+		console.error('Error extracting public_id:', error);
+		return null;
+	}
+};
 
 export const createPost = async (req, res) => {
 	const { token } = req.cookies;
@@ -56,6 +55,13 @@ export const createPost = async (req, res) => {
 			res.status(201).json(postDoc);
 		} catch (error) {
 			console.error('Error creating post:', error);
+
+			// Handle validation errors
+			if (error.name === 'ValidationError') {
+				const messages = Object.values(error.errors).map((err) => err.message);
+				return res.status(400).json({ message: messages.join(', ') });
+			}
+
 			res.status(500).json({ message: 'Server error' });
 		}
 	});
@@ -103,10 +109,13 @@ export const updatePost = async (req, res) => {
 
 			// If new image uploaded, handle old image deletion and new image URL
 			if (req.file) {
-				const newImageUrl = req.file?.secure_url || req.file?.url || req.file?.path;
+				const newImageUrl =
+					req.file?.secure_url || req.file?.url || req.file?.path;
 
 				if (!newImageUrl) {
-					return res.status(400).json({ message: 'Uploaded image URL missing' });
+					return res
+						.status(400)
+						.json({ message: 'Uploaded image URL missing' });
 				}
 
 				// Delete old image from Cloudinary if it exists
@@ -128,6 +137,13 @@ export const updatePost = async (req, res) => {
 			res.json({ message: 'Post updated successfully', post: updateData });
 		} catch (error) {
 			console.error('Error updating post:', error);
+
+			// Handle validation errors
+			if (error.name === 'ValidationError') {
+				const messages = Object.values(error.errors).map((err) => err.message);
+				return res.status(400).json({ message: messages.join(', ') });
+			}
+
 			res.status(500).json({ message: 'Server error' });
 		}
 	});
@@ -186,8 +202,6 @@ export const deletePost = async (req, res) => {
 		}
 	});
 };
-
-
 
 // ! OPTIONAL ADMIN DASHBOARD CONTROLLERS
 export const cleanupOrphanedImages = async (req, res) => {
@@ -290,85 +304,89 @@ export const cleanupOrphanedImages = async (req, res) => {
 
 // Optional: Preview orphaned images without deleting
 export const previewOrphanedImages = async (req, res) => {
-  const { token } = req.cookies;
+	const { token } = req.cookies;
 
-  jwt.verify(token, process.env.JWT_SECRET, {}, async (err, info) => {
-    if (err) return res.status(401).json({ message: 'Invalid token' });
-    if (info.role !== 'admin') {
-      return res.status(403).json({ message: 'Admins only' });
-    }
+	jwt.verify(token, process.env.JWT_SECRET, {}, async (err, info) => {
+		if (err) return res.status(401).json({ message: 'Invalid token' });
+		if (info.role !== 'admin') {
+			return res.status(403).json({ message: 'Admins only' });
+		}
 
-    try {
-      // Get all Cloudinary images
-      const cloudinaryImages = await cloudinary.v2.api.resources({
-        type: 'upload',
-        prefix: 'blog-images/',
-        max_results: 500
-      });
+		try {
+			// Get all Cloudinary images
+			const cloudinaryImages = await cloudinary.v2.api.resources({
+				type: 'upload',
+				prefix: 'blog-images/',
+				max_results: 500,
+			});
 
-      // Get all posts
-      const allPosts = await Post.find({}, 'cover');
-      const usedImageUrls = new Set(allPosts.map(post => post.cover));
+			// Get all posts
+			const allPosts = await Post.find({}, 'cover');
+			const usedImageUrls = new Set(allPosts.map((post) => post.cover));
 
-      // Find orphaned images
-      const orphanedImages = cloudinaryImages.resources
-        .filter(image => !usedImageUrls.has(image.secure_url))
-        .map(image => ({
-          public_id: image.public_id,
-          url: image.secure_url,
-          created_at: image.created_at,
-          size: image.bytes
-        }));
+			// Find orphaned images
+			const orphanedImages = cloudinaryImages.resources
+				.filter((image) => !usedImageUrls.has(image.secure_url))
+				.map((image) => ({
+					public_id: image.public_id,
+					url: image.secure_url,
+					created_at: image.created_at,
+					size: image.bytes,
+				}));
 
-      res.json({
-        totalCloudinaryImages: cloudinaryImages.resources.length,
-        orphanedCount: orphanedImages.length,
-        orphanedImages: orphanedImages.slice(0, 20), // Preview first 20
-        totalSize: orphanedImages.reduce((acc, img) => acc + img.size, 0)
-      });
-
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  });
+			res.json({
+				totalCloudinaryImages: cloudinaryImages.resources.length,
+				orphanedCount: orphanedImages.length,
+				orphanedImages: orphanedImages.slice(0, 20), // Preview first 20
+				totalSize: orphanedImages.reduce((acc, img) => acc + img.size, 0),
+			});
+		} catch (error) {
+			res.status(500).json({ error: error.message });
+		}
+	});
 };
 
 // Optional: Delete a specific image by URL or public_id
 export const deleteSpecificImage = async (req, res) => {
-  const { token } = req.cookies;
-  const { public_id, url } = req.body;
+	const { token } = req.cookies;
+	const { public_id, url } = req.body;
 
-  jwt.verify(token, process.env.JWT_SECRET, {}, async (err, info) => {
-    if (err) return res.status(401).json({ message: 'Invalid token' });
-    if (info.role !== 'admin') {
-      return res.status(403).json({ message: 'Admins only' });
-    }
+	jwt.verify(token, process.env.JWT_SECRET, {}, async (err, info) => {
+		if (err) return res.status(401).json({ message: 'Invalid token' });
+		if (info.role !== 'admin') {
+			return res.status(403).json({ message: 'Admins only' });
+		}
 
-    try {
-      let publicId = public_id;
-      
-      // If URL provided instead of public_id, extract it
-      if (url && !public_id) {
-        const extractedId = extractPublicIdFromUrl(url);
-        if (!extractedId) {
-          return res.status(400).json({ message: 'Could not extract public_id from URL' });
-        }
-        publicId = extractedId;
-      }
+		try {
+			let publicId = public_id;
 
-      if (!publicId) {
-        return res.status(400).json({ message: 'public_id or URL required' });
-      }
+			// If URL provided instead of public_id, extract it
+			if (url && !public_id) {
+				const extractedId = extractPublicIdFromUrl(url);
+				if (!extractedId) {
+					return res
+						.status(400)
+						.json({ message: 'Could not extract public_id from URL' });
+				}
+				publicId = extractedId;
+			}
 
-      const result = await cloudinary.v2.uploader.destroy(publicId);
-      
-      if (result.result === 'ok') {
-        res.json({ message: 'Image deleted successfully', public_id: publicId });
-      } else {
-        res.status(404).json({ message: 'Image not found or already deleted' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  });
+			if (!publicId) {
+				return res.status(400).json({ message: 'public_id or URL required' });
+			}
+
+			const result = await cloudinary.v2.uploader.destroy(publicId);
+
+			if (result.result === 'ok') {
+				res.json({
+					message: 'Image deleted successfully',
+					public_id: publicId,
+				});
+			} else {
+				res.status(404).json({ message: 'Image not found or already deleted' });
+			}
+		} catch (error) {
+			res.status(500).json({ error: error.message });
+		}
+	});
 };

@@ -17,7 +17,7 @@ const postSchema = new mongoose.Schema(
 		content: {
 			type: String,
 			required: true,
-			maxlength: [52428800, 'Content must be less than 50MB'],
+			maxlength: [5242880, 'Content must be less than 5MB'],
 		},
 		cover: {
 			type: String,

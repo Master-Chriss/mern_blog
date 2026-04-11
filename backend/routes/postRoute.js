@@ -8,8 +8,9 @@ import {
 	cleanupOrphanedImages,
 	previewOrphanedImages,
 	deleteSpecificImage,
+	uploadTempImage,
 } from '../controllers/postController.js';
-import upload  from '../middlewares/cloudinary.config.js';
+import upload from '../middlewares/cloudinary.config.js';
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ const router = express.Router();
 router.get('/admin/cleanup/preview', previewOrphanedImages);
 router.post('/admin/cleanup/execute', cleanupOrphanedImages);
 router.delete('/admin/image', deleteSpecificImage);
+router.post('/admin/upload-temp', upload.single('file'), uploadTempImage);
 
 //  PUBLIC ROUTES (less specific)
 router.get('/', getPosts);

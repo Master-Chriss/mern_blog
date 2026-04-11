@@ -29,6 +29,33 @@ const extractPublicIdFromUrl = (url) => {
 	}
 };
 
+// Temporary upload endpoint for Quill editor images
+export const uploadTempImage = async (req, res) => {
+	const { token } = req.cookies;
+
+	jwt.verify(token, process.env.JWT_SECRET, {}, async (err, info) => {
+		if (err) return res.status(401).json({ message: 'Invalid token' });
+
+		try {
+			const imageUrl = req.file?.secure_url || req.file?.url || req.file?.path;
+
+			if (!imageUrl) {
+				return res.status(400).json({ message: 'No image file provided' });
+			}
+
+			// Return only the image URL (no database operations)
+			res.status(200).json({
+				secure_url: imageUrl,
+				url: imageUrl,
+				message: 'Image uploaded successfully',
+			});
+		} catch (error) {
+			console.error('Error uploading image:', error);
+			res.status(500).json({ message: 'Server error uploading image' });
+		}
+	});
+};
+
 export const createPost = async (req, res) => {
 	const { token } = req.cookies;
 

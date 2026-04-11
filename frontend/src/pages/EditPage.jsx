@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import QuillEditor from '../QuillEditor';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
@@ -12,6 +13,7 @@ export default function EditPage() {
 	const [files, setFiles] = useState('');
 	const [redirect, setRedirect] = useState(false);
 	const [loading, setLoading] = useState(true);
+	const [isUpdating, setIsUpdating] = useState(false);
 	const [error, setError] = useState(null);
 
 	useEffect(() => {
@@ -40,12 +42,16 @@ export default function EditPage() {
 
 	async function updatePost(ev) {
 		ev.preventDefault();
+		if (isUpdating) return; // Prevent double clicks
+
 		const data = new FormData();
 		data.set('title', title);
 		data.set('summary', summary);
 		data.set('content', content);
 		data.set('id', id);
 		if (files?.[0]) data.set('file', files?.[0]);
+
+		setIsUpdating(true);
 
 		try {
 			const response = await fetch(`${API_URL}/post/${id}`, {
@@ -54,17 +60,19 @@ export default function EditPage() {
 				credentials: 'include',
 			});
 			if (response.ok) {
-				setRedirect(true);
+				toast.success('Article updated successfully! 🎉');
+				setTimeout(() => setRedirect(true), 500);
 			} else {
 				const errorData = await response.json();
 				console.error('Update failed:', errorData);
-				alert(
-					'Failed to update post: ' + (errorData.message || 'Unknown error'),
-				);
+				const errorMsg = errorData.message || 'Unknown error';
+				toast.error('Failed to update post: ' + errorMsg);
+				setIsUpdating(false);
 			}
 		} catch (error) {
 			console.error('Network error:', error);
-			alert('Network error - could not update post');
+			toast.error('Network error - could not update post');
+			setIsUpdating(false);
 		}
 	}
 
@@ -139,8 +147,14 @@ export default function EditPage() {
 
 				{/* Footer Button */}
 				<div className="flex justify-end pt-4">
-					<button className="bg-gradient-to-r from-[#00c6ff] to-[#0072ff] hover:brightness-110 text-white font-bold py-4 px-14 rounded-2xl transition-all shadow-[0_10px_30px_rgba(0,114,255,0.3)] active:scale-95">
-						Update Article
+					<button
+						disabled={isUpdating}
+						className={`bg-gradient-to-r from-[#00c6ff] to-[#0072ff] text-white font-bold py-4 px-14 rounded-2xl transition-all shadow-[0_10px_30px_rgba(0,114,255,0.3)] active:scale-95 ${
+							isUpdating
+								? 'opacity-75 cursor-not-allowed'
+								: 'hover:brightness-110'
+						}`}>
+						{isUpdating ? 'Updating Article...' : 'Update Article'}
 					</button>
 				</div>
 			</form>

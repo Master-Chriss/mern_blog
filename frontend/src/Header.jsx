@@ -1,6 +1,7 @@
 import { useContext } from 'react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { UserContext } from './UserContext';
 import {
 	FaSearch,
@@ -47,8 +48,10 @@ const Header = () => {
 
 			setUserInfo(null);
 			setMobileMenuOpen(false);
+			toast.success('Logged out successfully! 👋');
 		} catch (error) {
 			console.error('Logout failed:', error);
+			toast.error('Logout failed');
 		}
 	};
 
@@ -73,7 +76,11 @@ const Header = () => {
 								to="/"
 								className="text-xl sm:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400 whitespace-nowrap"
 								onClick={() => setMobileMenuOpen(false)}>
-								<img src={blogLogo} class="h-10 w-auto object-contain" alt="Logo" />
+								<img
+									src={blogLogo}
+									class="h-10 w-auto object-contain"
+									alt="Logo"
+								/>
 							</Link>
 
 							{/* Desktop Search - Hidden on mobile */}
@@ -135,7 +142,7 @@ const Header = () => {
 									<Link
 										to="/admin"
 										className="text-sm text-green-800 font-bold hover:text-cyan-400">
-										<FaTachometerAlt class='inline mr-1' fill='green' />
+										<FaTachometerAlt class="inline mr-1" fill="green" />
 										Dashboard
 									</Link>
 								)}

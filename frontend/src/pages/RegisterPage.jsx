@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -17,10 +18,13 @@ export default function RegisterPage() {
 			headers: { 'Content-Type': 'application/json' },
 		});
 		if (response.ok) {
-			alert('Registration successful');
-			setRedirect(true);
+			toast.success('Account created successfully! 🎉');
+			setTimeout(() => setRedirect(true), 1000);
 		} else {
-			alert('Registration failed');
+			const errorData = await response
+				.json()
+				.catch(() => ({ message: 'Registration failed' }));
+			toast.error(errorData.message || 'Registration failed');
 		}
 	}
 

@@ -1,5 +1,6 @@
 import { useState, useContext } from 'react';
 import { Navigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { UserContext } from '../UserContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
@@ -21,10 +22,11 @@ export default function LoginPage() {
 		if (response.ok) {
 			response.json().then((userInfo) => {
 				setUserInfo(userInfo);
-				setRedirect(true);
+				toast.success(`Welcome back, ${userInfo.username}! 🎉`);
+				setTimeout(() => setRedirect(true), 500);
 			});
 		} else {
-			alert('Wrong credentials');
+			toast.error('Wrong credentials');
 		}
 	}
 

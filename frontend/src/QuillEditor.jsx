@@ -3,6 +3,55 @@ const QuillEditor = ({ value, onChange }) => {
 	const editorRef = useRef(null);
 	const quillRef = useRef(null);
 
+	const handleImageUpload = async () => {
+		const input = document.createElement('input');
+		input.setAttribute('type', 'file');
+		input.setAttribute('accept', 'image/*');
+		input.click();
+
+		input.onchange = async () => {
+			const file = input.files[0];
+			if (!file) return;
+
+			const formData = new FormData();
+			formData.append('file', file);
+
+			try {
+				// Upload to backend's multer+cloudinary middleware
+				const response = await fetch(
+					`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/admin/upload-temp`,
+					{
+						method: 'POST',
+						body: formData,
+						credentials: 'include',
+					},
+				);
+
+				if (response.ok) {
+					const data = await response.json();
+					const imageUrl = data.secure_url || data.url;
+
+					// Insert the image URL into Quill (not base64)
+					const range = quillRef.current.getSelection();
+					if (range) {
+						quillRef.current.insertEmbed(
+							range.index,
+							'image',
+							imageUrl,
+							'user',
+						);
+						quillRef.current.setSelection(range.index + 1);
+					}
+				} else {
+					alert('Image upload failed');
+				}
+			} catch (error) {
+				console.error('Image upload error:', error);
+				alert('Error uploading image');
+			}
+		};
+	};
+
 	useEffect(() => {
 		const applyToolbarTitles = (toolbarEl) => {
 			if (!toolbarEl) return;
@@ -135,24 +184,27 @@ const QuillEditor = ({ value, onChange }) => {
 				quillRef.current = new window.Quill(editorRef.current, {
 					theme: 'snow',
 					modules: {
-						toolbar: [
-							[{ header: [1, 2, 3, 4, 5, 6, false] }],
-							['bold', 'italic', 'underline', 'strike'],
-							[{ color: [] }, { background: [] }],
-							[{ list: 'ordered' }, { list: 'bullet' }],
-							['link', 'image', 'video', 'code-block'],
-							['clean'],
-						],
+						toolbar: {
+							container: [
+								[{ header: [1, 2, 3, 4, 5, 6, false] }],
+								['bold', 'italic', 'underline', 'strike'],
+								[{ color: [] }, { background: [] }],
+								[{ list: 'ordered' }, { list: 'bullet' }],
+								['link', 'image', 'video', 'code-block'],
+								['clean'],
+							],
+							handlers: {
+								image: handleImageUpload,
+							},
+						},
 					},
-					});
+				});
 
-					applyToolbarTitles(
-						quillRef.current.getModule('toolbar')?.container
-					);
+				applyToolbarTitles(quillRef.current.getModule('toolbar')?.container);
 
-					if (value) {
-						quillRef.current.root.innerHTML = value;
-					}
+				if (value) {
+					quillRef.current.root.innerHTML = value;
+				}
 
 				quillRef.current.on('text-change', () => {
 					onChange(quillRef.current.root.innerHTML);

@@ -4,6 +4,11 @@ import jwt from 'jsonwebtoken';
 
 const salt = bcrypt.genSaltSync(10);
 const secret = process.env.JWT_SECRET;
+const tokenCookieOptions = {
+	httpOnly: true,
+	sameSite: 'none',
+	secure: true,
+};
 
 export const register = async (req, res) => {
 	const { username, email, password } = req.body;
@@ -50,11 +55,7 @@ export const login = async (req, res) => {
 		(err, token) => {
 			if (err) throw err;
 			res
-				.cookie('token', token, {
-					httpOnly: true,
-					sameSite: 'none', // Allows the cookie to be sent across different domains (Vercel to Render)
-					secure: true,
-				})
+				.cookie('token', token, tokenCookieOptions)
 				.json({
 					id: user._id,
 					username: user.username,
@@ -79,7 +80,7 @@ export const fetchProfile = (req, res) => {
 };
 
 export const logout = (req, res) => {
-	res.cookie('token', '').json('ok');
+	res.clearCookie('token', tokenCookieOptions).json('ok');
 };
 
 // TODO: Admin Dashboard Controllers

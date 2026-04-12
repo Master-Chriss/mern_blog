@@ -1,7 +1,8 @@
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { useContext } from 'react';
 import { UserContext } from './UserContext';
-import {UserContextProvider} from './UserContext';
+import { UserContextProvider } from './UserContext';
+import DataSpinner from './assets/dataSpinner/DataSpinner';
 
 // Page Imports
 import HomePage from './pages/HomePage';
@@ -19,40 +20,56 @@ import AdminDashboard from './pages/AdminDashboard';
  * This allows us to use 'useContext' to access the global user state.
  */
 const AppRoutes = () => {
-  // Access userInfo (user data) and ready (is the fetch finished?) from Context
-  const { userInfo, ready } = useContext(UserContext);
+	// Access userInfo (user data) and ready (is the fetch finished?) from Context
+	const { userInfo, ready } = useContext(UserContext);
 
-  // Prevent the app from redirecting while it is still checking the user's login status
-  if (!ready) {
-    return (
-      <div className="flex items-center justify-center min-h-screen text-white bg-slate-900">
-        <p className="animate-pulse">Loading User Session...</p>
-      </div>
-    );
-  }
+	// Prevent the app from redirecting while it is still checking the user's login status
+	if (!ready) {
+		return (
+			<div
+				className="flex items-center justify-center min-h-screen bg-slate-900"
+				role="alert"
+				aria-label="Loading user session">
+				<DataSpinner />
+			</div>
+		);
+	}
 
-  return (
-    <Routes>
-      {/* Layout wraps all child routes with common elements like the Header */}
-      <Route path="/" element={<Layout />}>
-        <Route index element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        
-        {/* Protected Route: Redirects to login if user is not authenticated */}
-        <Route
-          path="/create"
-          element={
-            userInfo?.role !== 'reader' ? <CreatePost /> : <Navigate to="/login" />
-          }
-        />
-        
-        <Route path="/post/:id" element={<PostPage />} />
-        <Route path="/edit/:id" element={<EditPage />} />
-        <Route path="/admin" element={userInfo?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
-      </Route>
-    </Routes>
-  );
+	return (
+		<Routes>
+			{/* Layout wraps all child routes with common elements like the Header */}
+			<Route path="/" element={<Layout />}>
+				<Route index element={<HomePage />} />
+				<Route path="/login" element={<LoginPage />} />
+				<Route path="/register" element={<RegisterPage />} />
+
+				{/* Protected Route: Redirects to login if user is not authenticated */}
+				<Route
+					path="/create"
+					element={
+						userInfo?.role !== 'reader' ? (
+							<CreatePost />
+						) : (
+							<Navigate to="/login" />
+						)
+					}
+				/>
+
+				<Route path="/post/:id" element={<PostPage />} />
+				<Route path="/edit/:id" element={<EditPage />} />
+				<Route
+					path="/admin"
+					element={
+						userInfo?.role === 'admin' ? (
+							<AdminDashboard />
+						) : (
+							<Navigate to="/" />
+						)
+					}
+				/>
+			</Route>
+		</Routes>
+	);
 };
 
 /**
@@ -61,11 +78,11 @@ const AppRoutes = () => {
  * This makes the user data available to every component in the tree.
  */
 const App = () => {
-  return (
-    <UserContextProvider>
-      <AppRoutes />
-    </UserContextProvider>
-  );
+	return (
+		<UserContextProvider>
+			<AppRoutes />
+		</UserContextProvider>
+	);
 };
 
 export default App;

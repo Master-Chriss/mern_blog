@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import QuillEditor from '../QuillEditor';
+import DataSpinner from '../assets/dataSpinner/DataSpinner';
+import SmallSpinner from '../assets/smallSpinner/SmallSpinner';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
-export default function EditPage() {
+const EditPage = () => {
 	const { id } = useParams();
 	const [title, setTitle] = useState('');
 	const [summary, setSummary] = useState('');
@@ -80,8 +82,11 @@ export default function EditPage() {
 
 	if (loading)
 		return (
-			<div className="min-h-screen bg-[#0d0e2b] flex items-center justify-center">
-				<div className="text-white text-xl">Loading post...</div>
+			<div
+				className="min-h-screen bg-[#0d0e2b] flex items-center justify-center"
+				role="alert"
+				aria-label="Loading post for editing">
+				<DataSpinner />
 			</div>
 		);
 
@@ -106,7 +111,7 @@ export default function EditPage() {
 					value={title}
 					onChange={(ev) => setTitle(ev.target.value)}
 					placeholder="New Post Title..."
-					className="w-full bg-transparent text-5xl md:text-7xl font-black text-white/20 placeholder:text-white/10 outline-none border-none mb-4 focus:text-white/40 transition-all"
+					className="w-full bg-transparent text-5xl md:text-7xl font-black text-white placeholder:text-white/30 outline-none border-none mb-4 focus:text-white transition-all"
 				/>
 
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -149,15 +154,26 @@ export default function EditPage() {
 				<div className="flex justify-end pt-4">
 					<button
 						disabled={isUpdating}
-						className={`bg-gradient-to-r from-[#00c6ff] to-[#0072ff] text-white font-bold py-4 px-14 rounded-2xl transition-all shadow-[0_10px_30px_rgba(0,114,255,0.3)] active:scale-95 ${
+						aria-label={
+							isUpdating ? 'Updating article' : 'Update article button'
+						}
+						className={`bg-gradient-to-r from-[#00c6ff] to-[#0072ff] text-white font-bold py-4 px-14 rounded-2xl transition-all shadow-[0_10px_30px_rgba(0,114,255,0.3)] active:scale-95 flex items-center gap-2 justify-center ${
 							isUpdating
 								? 'opacity-75 cursor-not-allowed'
 								: 'hover:brightness-110'
 						}`}>
-						{isUpdating ? 'Updating Article...' : 'Update Article'}
+						{isUpdating ? (
+							<>
+								<SmallSpinner /> Updating...
+							</>
+						) : (
+							'Update Article'
+						)}
 					</button>
 				</div>
 			</form>
 		</div>
 	);
-}
+};
+
+export default EditPage;

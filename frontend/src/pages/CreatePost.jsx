@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import QuillEditor from '../QuillEditor';
+import SmallSpinner from '../assets/smallSpinner/SmallSpinner';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -167,8 +168,17 @@ export default function CreatePost() {
 				<button
 					type="submit"
 					disabled={isSubmitting}
-					className="self-end px-12 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(6,182,212,0.3)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100">
-					{isSubmitting ? 'Publishing...' : 'Publish Article'}
+					aria-label={
+						isSubmitting ? 'Publishing article' : 'Publish article button'
+					}
+					className="self-end px-12 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(6,182,212,0.3)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100 flex items-center gap-2">
+					{isSubmitting ? (
+						<>
+							<SmallSpinner /> Publishing...
+						</>
+					) : (
+						'Publish Article'
+					)}
 				</button>
 			</form>
 		</div>

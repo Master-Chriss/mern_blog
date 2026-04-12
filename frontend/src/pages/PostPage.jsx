@@ -5,6 +5,8 @@ import { UserContext } from '../UserContext';
 import { FaEdit, FaChevronLeft, FaTrashAlt } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import DOMPurify from 'dompurify';
+import DataSpinner from '../assets/dataSpinner/DataSpinner';
+import SmallSpinner from '../assets/smallSpinner/SmallSpinner';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -52,7 +54,14 @@ const PostPage = () => {
 	};
 
 	if (!postInfo)
-		return <div className="text-center p-20 text-white">Loading...</div>;
+		return (
+			<div
+				className="flex items-center justify-center min-h-screen bg-slate-900"
+				role="alert"
+				aria-label="Loading post">
+				<DataSpinner />
+			</div>
+		);
 
 	const cleanHTML = postInfo.content
 		? DOMPurify.sanitize(postInfo.content)
@@ -102,9 +111,12 @@ const PostPage = () => {
 							<button
 								disabled={isDeleting}
 								onClick={confirmDelete}
-								className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl flex items-center justify-center hover:bg-red-700 transition-all">
+								aria-label={isDeleting ? 'Deleting post' : 'Delete post button'}
+								className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl flex items-center justify-center hover:bg-red-700 transition-all gap-2">
 								{isDeleting ? (
-									<div className="w-5 h-5 border-2 border-t-transparent animate-spin rounded-full" />
+									<>
+										<SmallSpinner /> Deleting...
+									</>
 								) : (
 									'Delete'
 								)}
@@ -162,17 +174,17 @@ const PostPage = () => {
 				</div>
 			</header>
 
-				<div className="rounded-[2.5rem] overflow-hidden bg-white/5 border border-white/10 shadow-2xl backdrop-blur-2xl">
-					<div className="relative w-full aspect-[4/3] sm:aspect-[16/10] md:aspect-auto md:h-[500px] bg-slate-900/60">
-						{coverUrl ? (
-							<img
-								src={coverUrl}
-								className="w-full h-full object-contain md:object-cover"
-								alt={postInfo.title}
-							/>
-						) : (
-							<div className="w-full h-full bg-slate-800/60" />
-						)}
+			<div className="rounded-[2.5rem] overflow-hidden bg-white/5 border border-white/10 shadow-2xl backdrop-blur-2xl">
+				<div className="relative w-full aspect-[4/3] sm:aspect-[16/10] md:aspect-auto md:h-[500px] bg-slate-900/60">
+					{coverUrl ? (
+						<img
+							src={coverUrl}
+							className="w-full h-full object-contain md:object-cover"
+							alt={postInfo.title}
+						/>
+					) : (
+						<div className="w-full h-full bg-slate-800/60" />
+					)}
 					<div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] to-transparent" />
 				</div>
 

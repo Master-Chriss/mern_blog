@@ -7,9 +7,8 @@ import {
 	getAllUsers,
 	updateUserRole,
 	deleteUser,
-	getStats
+	getStats,
 } from '../controllers/authController.js';
-
 const router = express.Router();
 
 router.post('/register', register);

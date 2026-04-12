@@ -2,6 +2,7 @@ import { useState, useContext } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { UserContext } from '../UserContext';
+import SmallSpinner from '../assets/smallSpinner/SmallSpinner';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -9,24 +10,39 @@ export default function LoginPage() {
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
 	const [redirect, setRedirect] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
 	const { setUserInfo } = useContext(UserContext);
 
 	async function login(ev) {
 		ev.preventDefault();
-		const response = await fetch(`${API_URL}/auth/login`, {
-			method: 'POST',
-			body: JSON.stringify({ username, password }),
-			headers: { 'Content-Type': 'application/json' },
-			credentials: 'include',
-		});
-		if (response.ok) {
-			response.json().then((userInfo) => {
-				setUserInfo(userInfo);
-				toast.success(`Welcome back, ${userInfo.username}! 🎉`);
-				setTimeout(() => setRedirect(true), 500);
+		if (isLoading) return; // Prevent double submission
+		if (!username.trim() || !password.trim()) {
+			toast.error('Please fill in all fields');
+			return;
+		}
+
+		setIsLoading(true);
+		try {
+			const response = await fetch(`${API_URL}/auth/login`, {
+				method: 'POST',
+				body: JSON.stringify({ username, password }),
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
 			});
-		} else {
-			toast.error('Wrong credentials');
+			if (response.ok) {
+				response.json().then((userInfo) => {
+					setUserInfo(userInfo);
+					toast.success(`Welcome back, ${userInfo.username}! 🎉`);
+					setTimeout(() => setRedirect(true), 500);
+				});
+			} else {
+				toast.error('Wrong credentials');
+				setIsLoading(false);
+			}
+		} catch (error) {
+			console.error('Login error:', error);
+			toast.error('Connection error. Please try again.');
+			setIsLoading(false);
 		}
 	}
 
@@ -63,8 +79,17 @@ export default function LoginPage() {
 						/>
 					</div>
 
-					<button className="w-full py-4 mt-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-lg hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] transition-all active:scale-95 shadow-lg">
-						Sign In
+					<button
+						disabled={isLoading}
+						aria-label={isLoading ? 'Signing in' : 'Sign in button'}
+						className="w-full py-4 mt-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-lg hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] transition-all active:scale-95 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2">
+						{isLoading ? (
+							<>
+								<SmallSpinner /> Signing In...
+							</>
+						) : (
+							'Sign In'
+						)}
 					</button>
 				</div>
 

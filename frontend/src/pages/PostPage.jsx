@@ -20,10 +20,10 @@ const PostPage = () => {
 	const { id } = useParams();
 	const navigate = useNavigate();
 
-	// Fixed permission logic
+	// Fixed permission logic - MUST check userInfo exists first
 	const isAdmin = userInfo?.role === 'admin';
 	const isActualAuthor = userInfo?.id === postInfo?.author?._id;
-	const canEdit = isActualAuthor || isAdmin;
+	const canEdit = (isActualAuthor || isAdmin) && postInfo?.author?._id;
 	const canDelete = isAdmin;
 
 	useEffect(() => {

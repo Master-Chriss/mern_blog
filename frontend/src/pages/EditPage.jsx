@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import QuillEditor from '../QuillEditor';
 import DataSpinner from '../assets/dataSpinner/DataSpinner';
 import SmallSpinner from '../assets/smallSpinner/SmallSpinner';
+import { UserContext } from '../UserContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const EditPage = () => {
 	const { id } = useParams();
+	const { userInfo, ready } = useContext(UserContext);
 	const [title, setTitle] = useState('');
 	const [summary, setSummary] = useState('');
 	const [content, setContent] = useState('');
@@ -17,8 +19,19 @@ const EditPage = () => {
 	const [loading, setLoading] = useState(true);
 	const [isUpdating, setIsUpdating] = useState(false);
 	const [error, setError] = useState(null);
+	const [unauthorizedError, setUnauthorizedError] = useState(null);
 
 	useEffect(() => {
+		// Wait for user context to load
+		if (!ready) return;
+
+		// Redirect if user is not logged in
+		if (!userInfo) {
+			setUnauthorizedError('You must be logged in to edit posts');
+			setLoading(false);
+			return;
+		}
+
 		setLoading(true);
 		fetch(`${API_URL}/post/${id}`)
 			.then((response) => {
@@ -28,19 +41,38 @@ const EditPage = () => {
 				return response.json();
 			})
 			.then((postInfo) => {
+				// Check if author exists
+				if (!postInfo.author || !postInfo.author._id) {
+					setError(
+						'Post author no longer exists in the system. This post cannot be edited.',
+					);
+					setLoading(false);
+					return;
+				}
+
+				// Check permissions
+				const userIsAdmin = userInfo?.role === 'admin';
+				const userIsAuthor = userInfo?.id === postInfo.author._id;
+
+				if (!userIsAdmin && !userIsAuthor) {
+					setUnauthorizedError('You are not authorized to edit this post');
+					setLoading(false);
+					return;
+				}
+
 				setTitle(postInfo.title);
 				setSummary(postInfo.summary);
 				setContent(postInfo.content);
 				setError(null);
+				setUnauthorizedError(null);
+				setLoading(false);
 			})
 			.catch((err) => {
 				console.error('Fetch error:', err);
 				setError('Failed to load post. Make sure the backend is running.');
-			})
-			.finally(() => {
 				setLoading(false);
 			});
-	}, [id]);
+	}, [id, userInfo, ready]);
 
 	async function updatePost(ev) {
 		ev.preventDefault();
@@ -79,6 +111,30 @@ const EditPage = () => {
 	}
 
 	if (redirect) return <Navigate to={`/post/${id}`} />;
+
+	// Wait for user context to load
+	if (!ready)
+		return (
+			<div
+				className="min-h-screen bg-[#0d0e2b] flex items-center justify-center"
+				role="alert"
+				aria-label="Loading user session">
+				<DataSpinner />
+			</div>
+		);
+
+	// Check authorization before loading
+	if (unauthorizedError)
+		return (
+			<div className="min-h-screen bg-[#0d0e2b] flex items-center justify-center p-6">
+				<div className="text-red-400 text-xl text-center max-w-lg p-8 border border-red-400/30 rounded-2xl">
+					<p className="mb-4">❌ {unauthorizedError}</p>
+					<p className="text-sm text-gray-400">
+						Only the post author or an admin can edit this post
+					</p>
+				</div>
+			</div>
+		);
 
 	if (loading)
 		return (

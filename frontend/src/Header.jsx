@@ -142,7 +142,7 @@ const Header = () => {
 									<Link
 										to="/admin"
 										className="text-sm text-green-800 font-bold hover:text-cyan-400">
-										<FaTachometerAlt class="inline mr-1" fill="green" />
+										<FaTachometerAlt className="inline mr-1" fill="green" />
 										Dashboard
 									</Link>
 								)}

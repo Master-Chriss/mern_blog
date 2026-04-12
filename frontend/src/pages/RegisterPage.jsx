@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import SmallSpinner from '../assets/smallSpinner/SmallSpinner';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -9,22 +10,37 @@ export default function RegisterPage() {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [redirect, setRedirect] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
 
 	async function register(ev) {
 		ev.preventDefault();
-		const response = await fetch(`${API_URL}/auth/register`, {
-			method: 'POST',
-			body: JSON.stringify({ username, password, email }),
-			headers: { 'Content-Type': 'application/json' },
-		});
-		if (response.ok) {
-			toast.success('Account created successfully! 🎉');
-			setTimeout(() => setRedirect(true), 1000);
-		} else {
-			const errorData = await response
-				.json()
-				.catch(() => ({ message: 'Registration failed' }));
-			toast.error(errorData.message || 'Registration failed');
+		if (isLoading) return; // Prevent double submission
+		if (!username.trim() || !email.trim() || !password.trim()) {
+			toast.error('Please fill in all fields');
+			return;
+		}
+
+		setIsLoading(true);
+		try {
+			const response = await fetch(`${API_URL}/auth/register`, {
+				method: 'POST',
+				body: JSON.stringify({ username, password, email }),
+				headers: { 'Content-Type': 'application/json' },
+			});
+			if (response.ok) {
+				toast.success('Account created successfully! 🎉');
+				setTimeout(() => setRedirect(true), 1000);
+			} else {
+				const errorData = await response
+					.json()
+					.catch(() => ({ message: 'Registration failed' }));
+				toast.error(errorData.message || 'Registration failed');
+				setIsLoading(false);
+			}
+		} catch (error) {
+			console.error('Register error:', error);
+			toast.error('Connection error. Please try again.');
+			setIsLoading(false);
 		}
 	}
 
@@ -67,8 +83,19 @@ export default function RegisterPage() {
 						onChange={(ev) => setPassword(ev.target.value)}
 					/>
 
-					<button className="w-full py-4 mt-4 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-lg hover:shadow-[0_0_20px_rgba(147,51,234,0.5)] transition-all active:scale-95 shadow-lg">
-						Create Account
+					<button
+						disabled={isLoading}
+						aria-label={
+							isLoading ? 'Creating account' : 'Create account button'
+						}
+						className="w-full py-4 mt-4 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-lg hover:shadow-[0_0_20px_rgba(147,51,234,0.5)] transition-all active:scale-95 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2">
+						{isLoading ? (
+							<>
+								<SmallSpinner /> Creating Account...
+							</>
+						) : (
+							'Create Account'
+						)}
 					</button>
 				</div>
 

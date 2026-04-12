@@ -8,7 +8,7 @@ A full-stack blog application built with the MERN stack (MongoDB, Express, React
 
 - 🎨 **Glassmorphism UI** - Modern, sleek design with backdrop blur effects
 - 🔐 **Role-based Access** - Admin, Author, and Reader roles
-- 📝 **Rich Text Editor** - Create and edit posts with ReactQuill
+- 📝 **Rich Text Editor** - Create and edit posts with Quill Editor
 - 🖼️ **Cloud Image Storage** - Images stored on Cloudinary
 - 🔍 **Instant Search** - Search posts by title, summary, or author
 - 📱 **Fully Responsive** - Works on all devices

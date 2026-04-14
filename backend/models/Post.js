@@ -30,10 +30,18 @@ const postSchema = new mongoose.Schema(
 				required: true,
 				trim: true,
 			},
+			tags: {
+				type: [String],
+				default: [],
+				validate: {
+					validator: (tags) => tags.length <= 8,
+					message: 'A post can have at most 8 tags',
+				},
+			},
 			cover: {
 				type: String,
 				required: true,
-		},
+			},
 		author: { type: Schema.Types.ObjectId, ref: 'User' },
 	},
 	{

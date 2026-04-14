@@ -3,6 +3,7 @@ import cloudinary from 'cloudinary';
 import { Post } from '../models/Post.js';
 import jwt from 'jsonwebtoken';
 import { normalizePostCategory } from '../constants/postCategories.js';
+import { normalizePostTags } from '../utils/postTags.js';
 
 dotenv.config();
 
@@ -64,7 +65,7 @@ export const createPost = async (req, res) => {
 		if (err) return res.status(401).json({ message: 'Invalid token' });
 
 		try {
-				const { title, summary, content, category } = req.body;
+				const { title, summary, content, category, tags } = req.body;
 				const imageUrl = req.file?.secure_url || req.file?.url || req.file?.path;
 
 			// Check if file was uploaded
@@ -77,6 +78,7 @@ export const createPost = async (req, res) => {
 					summary,
 					content,
 					category: normalizePostCategory(category),
+					tags: normalizePostTags(tags),
 					cover: imageUrl,
 					author: info.id,
 				});
@@ -117,7 +119,7 @@ export const updatePost = async (req, res) => {
 		if (err) return res.status(401).json({ message: 'Invalid token' });
 
 		try {
-				const { id, title, summary, content, category } = req.body;
+				const { id, title, summary, content, category, tags } = req.body;
 				const postId = req.params.id || id;
 			const postDoc = await Post.findById(postId);
 
@@ -139,6 +141,7 @@ export const updatePost = async (req, res) => {
 					summary,
 					content,
 					category: normalizePostCategory(category),
+					tags: normalizePostTags(tags),
 				};
 
 			// If new image uploaded, handle old image deletion and new image URL

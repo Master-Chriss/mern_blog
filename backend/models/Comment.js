@@ -15,11 +15,22 @@ const commentSchema = new Schema(
 			ref: 'User',
 			required: true,
 		},
+		parentComment: {
+			type: Schema.Types.ObjectId,
+			ref: 'Comment',
+			default: null,
+			index: true,
+		},
 		content: {
 			type: String,
 			required: true,
 			trim: true,
 			maxlength: [1000, 'Comment must be less than 1000 characters'],
+		},
+		likedBy: {
+			type: [Schema.Types.ObjectId],
+			ref: 'User',
+			default: [],
 		},
 	},
 	{

@@ -2,6 +2,9 @@ import mongoose from 'mongoose';
 import { Comment } from '../models/Comment.js';
 import { Post } from '../models/Post.js';
 
+const populateCommentAuthor = (query) =>
+	query.populate('author', ['username', 'role']);
+
 export const getCommentsByPost = async (req, res) => {
 	const { postId } = req.params;
 
@@ -9,16 +12,16 @@ export const getCommentsByPost = async (req, res) => {
 		return res.status(400).json({ message: 'Invalid post id' });
 	}
 
-	const comments = await Comment.find({ post: postId })
-		.populate('author', ['username', 'role'])
-		.sort({ createdAt: -1 });
+	const comments = await populateCommentAuthor(
+		Comment.find({ post: postId }).sort({ createdAt: -1 }),
+	);
 
 	res.json(comments);
 };
 
 export const createComment = async (req, res) => {
 	const { postId } = req.params;
-	const { content } = req.body;
+	const { content, parentCommentId } = req.body;
 
 	if (!mongoose.Types.ObjectId.isValid(postId)) {
 		return res.status(400).json({ message: 'Invalid post id' });
@@ -34,16 +37,35 @@ export const createComment = async (req, res) => {
 		return res.status(404).json({ message: 'Post not found' });
 	}
 
+	let validatedParentCommentId = null;
+
+	if (parentCommentId) {
+		if (!mongoose.Types.ObjectId.isValid(parentCommentId)) {
+			return res.status(400).json({ message: 'Invalid parent comment id' });
+		}
+
+		const parentComment = await Comment.findOne({
+			_id: parentCommentId,
+			post: postId,
+		});
+
+		if (!parentComment) {
+			return res.status(404).json({ message: 'Parent comment not found' });
+		}
+
+		validatedParentCommentId = parentCommentId;
+	}
+
 	const comment = await Comment.create({
 		post: postId,
 		author: req.user.id,
+		parentComment: validatedParentCommentId,
 		content: trimmedContent,
 	});
 
-	const populatedComment = await Comment.findById(comment._id).populate('author', [
-		'username',
-		'role',
-	]);
+	const populatedComment = await populateCommentAuthor(
+		Comment.findById(comment._id),
+	);
 
 	res.status(201).json(populatedComment);
 };
@@ -67,6 +89,71 @@ export const deleteComment = async (req, res) => {
 		return res.status(403).json({ message: 'Not authorized to delete this comment' });
 	}
 
-	await Comment.findByIdAndDelete(commentId);
+	await Comment.deleteMany({
+		$or: [{ _id: commentId }, { parentComment: commentId }],
+	});
 	res.json({ message: 'Comment deleted' });
+};
+
+export const toggleCommentLike = async (req, res) => {
+	const { commentId } = req.params;
+
+	if (!mongoose.Types.ObjectId.isValid(commentId)) {
+		return res.status(400).json({ message: 'Invalid comment id' });
+	}
+
+	const comment = await Comment.findById(commentId);
+	if (!comment) {
+		return res.status(404).json({ message: 'Comment not found' });
+	}
+
+	const userId = req.user.id;
+	const alreadyLiked = comment.likedBy.some((id) => id.toString() === userId);
+
+	if (alreadyLiked) {
+		comment.likedBy = comment.likedBy.filter((id) => id.toString() !== userId);
+	} else {
+		comment.likedBy.push(userId);
+	}
+
+	await comment.save();
+
+	const populatedComment = await populateCommentAuthor(
+		Comment.findById(comment._id),
+	);
+
+	res.json({
+		message: alreadyLiked ? 'Comment unliked' : 'Comment liked',
+		comment: populatedComment,
+	});
+};
+
+export const deleteCommentReply = async (req, res) => {
+	const { commentId, replyId } = req.params;
+
+	if (
+		!mongoose.Types.ObjectId.isValid(commentId) ||
+		!mongoose.Types.ObjectId.isValid(replyId)
+	) {
+		return res.status(400).json({ message: 'Invalid comment id' });
+	}
+
+	const reply = await Comment.findOne({
+		_id: replyId,
+		parentComment: commentId,
+	});
+
+	if (!reply) {
+		return res.status(404).json({ message: 'Reply not found' });
+	}
+
+	const isOwner = reply.author.toString() === req.user.id;
+	const isAdmin = req.user.role === 'admin';
+
+	if (!isOwner && !isAdmin) {
+		return res.status(403).json({ message: 'Not authorized to delete this reply' });
+	}
+
+	await Comment.findByIdAndDelete(replyId);
+	res.json({ message: 'Reply deleted' });
 };

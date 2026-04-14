@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Post from '../Post';
+import Seo from '../components/Seo';
 import { POST_CATEGORIES } from '../constants/postCategories';
 import {
 	filterPostsByCategory,
@@ -83,6 +84,11 @@ export default function ArchivePage() {
 
 	return (
 		<main className="mx-auto max-w-7xl px-6 py-12">
+			<Seo
+				title={`${archiveConfig.title} | New Generation Latest News`}
+				description={archiveConfig.subtitle}
+				pathname={`/${type}/${slug}`}
+			/>
 			<section className="mb-14 rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-md">
 				<p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
 					Archive

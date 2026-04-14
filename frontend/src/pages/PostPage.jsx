@@ -16,6 +16,7 @@ import { toast } from 'react-hot-toast';
 import DOMPurify from 'dompurify';
 import { UserContext } from '../UserContext';
 import ConfirmationDialog from '../components/ConfirmationDialog';
+import Seo from '../components/Seo';
 import DataSpinner from '../assets/dataSpinner/DataSpinner';
 import SmallSpinner from '../assets/smallSpinner/SmallSpinner';
 import { DEFAULT_POST_CATEGORY } from '../constants/postCategories';
@@ -379,9 +380,16 @@ const PostPage = () => {
 		`${postInfo.title} ${postUrl}`,
 	)}`;
 
-	return (
-		<article className="mx-auto max-w-6xl animate-in fade-in px-4 py-8 duration-1000">
-			<ConfirmationDialog
+		return (
+			<article className="mx-auto max-w-6xl animate-in fade-in px-4 py-8 duration-1000">
+				<Seo
+					title={`${postInfo.title} | New Generation Latest News`}
+					description={postInfo.summary || 'Read this story on New Generation Latest News.'}
+					image={coverUrl}
+					type="article"
+					pathname={`/post/${postInfo._id}`}
+				/>
+				<ConfirmationDialog
 				open={showModal}
 				title="Delete this story permanently?"
 				message={`"${postInfo.title}" will be removed for every reader, and its related cover image will be deleted as well.`}

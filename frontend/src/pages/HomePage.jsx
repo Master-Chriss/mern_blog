@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Post from '../Post';
+import Seo from '../components/Seo';
 import { POST_CATEGORIES } from '../constants/postCategories';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
@@ -59,8 +60,13 @@ const HomePage = () => {
 	};
 
 	return (
-		<main className="max-w-7xl mx-auto px-8 py-12">
-			{/* 1. Modern Hero Section */}
+			<main className="max-w-7xl mx-auto px-8 py-12">
+				<Seo
+					title="New Generation Latest News | Explore Our Latest Stories"
+					description="Discover fresh stories across technology, entertainment, sports, lifestyle, business, and more from New Generation Latest News."
+					pathname={location.pathname + location.search}
+				/>
+				{/* 1. Modern Hero Section */}
 				<section className="mb-20 text-center space-y-4">
 					<h1 className="text-3xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400">
 						Explore Our Latest Stories

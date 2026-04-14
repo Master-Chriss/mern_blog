@@ -13,6 +13,7 @@ import CreatePost from './pages/CreatePost';
 import PostPage from './pages/PostPage';
 import EditPage from './pages/EditPage';
 import AdminDashboard from './pages/AdminDashboard';
+import ArchivePage from './pages/ArchivePage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
@@ -59,8 +60,9 @@ const AppRoutes = () => {
 					}
 				/>
 
-				<Route path="/post/:id" element={<PostPage />} />
-				<Route path="/edit/:id" element={<EditPage />} />
+					<Route path="/post/:id" element={<PostPage />} />
+					<Route path="/:type(category|tag)/:slug" element={<ArchivePage />} />
+					<Route path="/edit/:id" element={<EditPage />} />
 				<Route
 					path="/admin"
 					element={

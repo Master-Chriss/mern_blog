@@ -1,6 +1,7 @@
 import { formatISO9075 } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { DEFAULT_POST_CATEGORY } from './constants/postCategories';
+import { slugifyValue } from './utils/postFilters';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -51,9 +52,9 @@ export default function Post({
 					<div className="mb-3 flex flex-wrap items-start justify-between gap-3">
 						{/* 2. PLACE UI HERE (Next to Author) */}
 						<div className="flex flex-col">
-							<Link
-								to={`/?category=${encodeURIComponent(displayCategory)}`}
-								className="mb-2 inline-flex w-fit rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[11px] font-semibold text-cyan-300 transition hover:border-cyan-300/40 hover:bg-cyan-400/15">
+								<Link
+									to={`/category/${slugifyValue(displayCategory)}`}
+									className="mb-2 inline-flex w-fit rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[11px] font-semibold text-cyan-300 transition hover:border-cyan-300/40 hover:bg-cyan-400/15">
 								{displayCategory}
 							</Link>
 							<span className="text-xs font-medium text-cyan-400 tracking-tighter">
@@ -94,14 +95,15 @@ export default function Post({
 
 					{tags.length > 0 && (
 						<div className="mt-4 flex flex-wrap gap-2">
-							{tags.slice(0, 3).map((tag) => (
-								<span
-									key={tag}
-									className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
-									#{tag}
-								</span>
-							))}
-						</div>
+								{tags.slice(0, 3).map((tag) => (
+									<Link
+										key={tag}
+										to={`/tag/${slugifyValue(tag)}`}
+										className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
+										#{tag}
+									</Link>
+								))}
+							</div>
 					)}
 
 					<div className="mt-6 flex items-center justify-between">

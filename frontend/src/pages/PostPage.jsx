@@ -19,6 +19,7 @@ import ConfirmationDialog from '../components/ConfirmationDialog';
 import DataSpinner from '../assets/dataSpinner/DataSpinner';
 import SmallSpinner from '../assets/smallSpinner/SmallSpinner';
 import { DEFAULT_POST_CATEGORY } from '../constants/postCategories';
+import { slugifyValue } from '../utils/postFilters';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -410,9 +411,9 @@ const PostPage = () => {
 			</Link>
 
 			<header className="mb-10">
-				<Link
-					to={`/?category=${encodeURIComponent(displayCategory)}`}
-					className="mb-5 inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-1.5 text-xs font-semibold text-cyan-300 transition hover:border-cyan-300/40 hover:bg-cyan-400/15">
+					<Link
+						to={`/category/${slugifyValue(displayCategory)}`}
+						className="mb-5 inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-1.5 text-xs font-semibold text-cyan-300 transition hover:border-cyan-300/40 hover:bg-cyan-400/15">
 					{displayCategory}
 				</Link>
 				<h1 className="mb-8 break-words text-4xl font-black leading-tight tracking-tight text-white md:text-6xl">
@@ -457,13 +458,14 @@ const PostPage = () => {
 
 				{displayTags.length > 0 && (
 					<div className="mt-6 flex flex-wrap gap-3">
-						{displayTags.map((tag) => (
-							<span
-								key={tag}
-								className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-300">
-								#{tag}
-							</span>
-						))}
+							{displayTags.map((tag) => (
+								<Link
+									key={tag}
+									to={`/tag/${slugifyValue(tag)}`}
+									className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-300">
+									#{tag}
+								</Link>
+							))}
 					</div>
 				)}
 
@@ -554,7 +556,7 @@ const PostPage = () => {
 							</h2>
 						</div>
 						<Link
-							to={`/?category=${encodeURIComponent(displayCategory)}`}
+							to={`/category/${slugifyValue(displayCategory)}`}
 							className="text-sm font-semibold text-cyan-300 transition hover:text-cyan-200">
 							More in {displayCategory}
 						</Link>

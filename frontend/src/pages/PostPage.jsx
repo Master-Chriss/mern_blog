@@ -4,6 +4,7 @@ import { formatISO9075 } from 'date-fns';
 import {
 	FaChevronLeft,
 	FaEdit,
+	FaHeart,
 	FaLink,
 	FaRegComments,
 	FaShareAlt,
@@ -30,6 +31,10 @@ const PostPage = () => {
 	const [commentText, setCommentText] = useState('');
 	const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 	const [deletingCommentId, setDeletingCommentId] = useState(null);
+	const [replyingToId, setReplyingToId] = useState(null);
+	const [replyText, setReplyText] = useState('');
+	const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+	const [likingCommentId, setLikingCommentId] = useState(null);
 	const [postUrl, setPostUrl] = useState('');
 
 	const { userInfo } = useContext(UserContext);
@@ -206,6 +211,111 @@ const PostPage = () => {
 			toast.success('Comment deleted');
 		} catch (error) {
 			toast.error(error.message || 'Could not delete comment');
+		} finally {
+			setDeletingCommentId(null);
+		}
+	};
+
+	const submitReply = async (event, parentCommentId) => {
+		event.preventDefault();
+
+		if (!replyText.trim()) {
+			toast.error('Write a reply before posting');
+			return;
+		}
+
+		setIsSubmittingReply(true);
+
+		try {
+			const response = await fetch(`${API_URL}/comments/post/${id}`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({
+					content: replyText,
+					parentCommentId,
+				}),
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => null);
+				throw new Error(errorData?.message || 'Failed to post reply');
+			}
+
+			const newReply = await response.json();
+			setComments((currentComments) => [newReply, ...currentComments]);
+			setReplyText('');
+			setReplyingToId(null);
+			toast.success('Reply posted');
+		} catch (error) {
+			toast.error(error.message || 'Could not post reply');
+		} finally {
+			setIsSubmittingReply(false);
+		}
+	};
+
+	const toggleCommentLike = async (commentId) => {
+		if (!userInfo) {
+			toast.error('Please log in to like comments');
+			return;
+		}
+
+		setLikingCommentId(commentId);
+
+		try {
+			const response = await fetch(`${API_URL}/comments/${commentId}/like`, {
+				method: 'POST',
+				credentials: 'include',
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => null);
+				throw new Error(errorData?.message || 'Failed to update like');
+			}
+
+			const data = await response.json();
+			setComments((currentComments) =>
+				currentComments.map((comment) =>
+					comment._id === commentId ? data.comment : comment,
+				),
+			);
+		} catch (error) {
+			toast.error(error.message || 'Could not update like');
+		} finally {
+			setLikingCommentId(null);
+		}
+	};
+
+	const topLevelComments = comments.filter((comment) => !comment.parentComment);
+
+	const getRepliesForComment = (commentId) =>
+		comments
+			.filter((comment) => comment.parentComment === commentId)
+			.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+	const deleteReply = async (parentCommentId, replyId) => {
+		setDeletingCommentId(replyId);
+
+		try {
+			const response = await fetch(
+				`${API_URL}/comments/${parentCommentId}/replies/${replyId}`,
+				{
+					method: 'DELETE',
+					credentials: 'include',
+				},
+			);
+
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => null);
+				throw new Error(errorData?.message || 'Failed to delete reply');
+			}
+
+			setComments((currentComments) =>
+				currentComments.filter((comment) => comment._id !== replyId),
+			);
+			toast.success('Reply deleted');
+		} catch (error) {
+			toast.error(error.message || 'Could not delete reply');
 		} finally {
 			setDeletingCommentId(null);
 		}
@@ -501,7 +611,8 @@ const PostPage = () => {
 						</h2>
 					</div>
 					<p className="text-sm text-slate-400">
-						{comments.length} {comments.length === 1 ? 'comment' : 'comments'}
+						{topLevelComments.length}{' '}
+						{topLevelComments.length === 1 ? 'comment' : 'comments'}
 					</p>
 				</div>
 
@@ -544,18 +655,22 @@ const PostPage = () => {
 					)}
 				</div>
 
-				<div className="mt-8 space-y-4">
-					{comments.length > 0 ? (
-						comments.map((comment) => {
-							const canDeleteComment =
-								userInfo &&
-								(userInfo.role === 'admin' ||
-									userInfo.id === comment.author?._id);
+					<div className="mt-8 space-y-4">
+						{topLevelComments.length > 0 ? (
+							topLevelComments.map((comment) => {
+								const canDeleteComment =
+									userInfo &&
+									(userInfo.role === 'admin' ||
+										userInfo.id === comment.author?._id);
+								const commentReplies = getRepliesForComment(comment._id);
+								const hasLikedComment = userInfo
+									? comment.likedBy?.some((id) => id === userInfo.id)
+									: false;
 
-							return (
-								<div
-									key={comment._id}
-									className="rounded-[1.75rem] border border-white/10 bg-slate-950/30 p-5">
+								return (
+									<div
+										key={comment._id}
+										className="rounded-[1.75rem] border border-white/10 bg-slate-950/30 p-5">
 									<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 										<div>
 											<p className="font-semibold text-white">
@@ -577,12 +692,135 @@ const PostPage = () => {
 											</button>
 										)}
 									</div>
-									<p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-300">
-										{comment.content}
-									</p>
-								</div>
-							);
-						})
+										<p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-300">
+											{comment.content}
+										</p>
+										<div className="mt-4 flex flex-wrap items-center gap-4">
+											<button
+												type="button"
+												onClick={() => toggleCommentLike(comment._id)}
+												disabled={likingCommentId === comment._id}
+												className={`inline-flex items-center gap-2 text-sm font-semibold transition ${
+													hasLikedComment
+														? 'text-rose-400'
+														: 'text-slate-400 hover:text-rose-400'
+												}`}>
+												<FaHeart />
+												{comment.likedBy?.length || 0}
+											</button>
+											{userInfo && (
+												<button
+													type="button"
+													onClick={() =>
+														setReplyingToId((currentId) =>
+															currentId === comment._id ? null : comment._id,
+														)
+													}
+													className="text-sm font-semibold text-cyan-300 transition hover:text-cyan-200">
+													Reply
+												</button>
+											)}
+										</div>
+
+										{replyingToId === comment._id && userInfo && (
+											<form
+												onSubmit={(event) => submitReply(event, comment._id)}
+												className="mt-4 space-y-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+												<textarea
+													value={replyText}
+													onChange={(event) => setReplyText(event.target.value)}
+													placeholder={`Reply to @${comment.author?.username || 'this comment'}...`}
+													className="min-h-[100px] w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400"
+												/>
+												<div className="flex justify-end gap-3">
+													<button
+														type="button"
+														onClick={() => {
+															setReplyingToId(null);
+															setReplyText('');
+														}}
+														className="rounded-xl border border-white/10 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/5">
+														Cancel
+													</button>
+													<button
+														type="submit"
+														disabled={isSubmittingReply}
+														className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2 text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-60">
+														{isSubmittingReply ? (
+															<>
+																<SmallSpinner /> Replying...
+															</>
+														) : (
+															'Post Reply'
+														)}
+													</button>
+												</div>
+											</form>
+										)}
+
+										{commentReplies.length > 0 && (
+											<div className="mt-5 space-y-3 border-l border-white/10 pl-4 sm:pl-6">
+												{commentReplies.map((reply) => {
+													const canDeleteReply =
+														userInfo &&
+														(userInfo.role === 'admin' ||
+															userInfo.id === reply.author?._id);
+													const hasLikedReply = userInfo
+														? reply.likedBy?.some((id) => id === userInfo.id)
+														: false;
+
+													return (
+														<div
+															key={reply._id}
+															className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+															<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+																<div>
+																	<p className="font-semibold text-white">
+																		@{reply.author?.username || 'Anonymous'}
+																	</p>
+																	<p className="mt-1 text-xs text-slate-500">
+																		{formatISO9075(new Date(reply.createdAt))}
+																	</p>
+																</div>
+																{canDeleteReply && (
+																	<button
+																		type="button"
+																		onClick={() =>
+																			deleteReply(comment._id, reply._id)
+																		}
+																		disabled={deletingCommentId === reply._id}
+																		className="text-sm font-semibold text-red-400 transition hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50">
+																		{deletingCommentId === reply._id
+																			? 'Deleting...'
+																			: 'Delete'}
+																	</button>
+																)}
+															</div>
+															<p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-300">
+																{reply.content}
+															</p>
+															<div className="mt-3">
+																<button
+																	type="button"
+																	onClick={() => toggleCommentLike(reply._id)}
+																	disabled={likingCommentId === reply._id}
+																	className={`inline-flex items-center gap-2 text-sm font-semibold transition ${
+																		hasLikedReply
+																			? 'text-rose-400'
+																			: 'text-slate-400 hover:text-rose-400'
+																	}`}>
+																	<FaHeart />
+																	{reply.likedBy?.length || 0}
+																</button>
+															</div>
+														</div>
+													);
+												})}
+											</div>
+										)}
+									</div>
+								);
+							})
 					) : (
 						<div className="rounded-[1.75rem] border border-dashed border-white/10 bg-slate-950/20 p-6 text-center text-slate-500">
 							No comments yet. Be the first to start the conversation.

@@ -16,6 +16,7 @@ const PostPage = () => {
 	const [showModal, setShowModal] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [isSuccess, setIsSuccess] = useState(false);
+	const [relatedPosts, setRelatedPosts] = useState([]);
 
 	const { userInfo } = useContext(UserContext);
 	const { id } = useParams();
@@ -32,6 +33,38 @@ const PostPage = () => {
 			response.json().then((info) => setPostInfo(info));
 		});
 	}, [id]);
+
+	useEffect(() => {
+		if (!postInfo?._id) return;
+
+		fetch(`${API_URL}/post`)
+			.then((response) => response.json())
+			.then((posts) => {
+				const currentTags = new Set(postInfo.tags || []);
+				const related = posts
+					.filter((post) => post._id !== postInfo._id)
+					.map((post) => {
+						const postTags = post.tags || [];
+						const sharedTagCount = postTags.filter((tag) =>
+							currentTags.has(tag),
+						).length;
+						const sameCategory = post.category === postInfo.category ? 1 : 0;
+						return {
+							...post,
+							relevanceScore: sharedTagCount * 3 + sameCategory,
+						};
+					})
+					.filter((post) => post.relevanceScore > 0)
+					.sort((a, b) => b.relevanceScore - a.relevanceScore)
+					.slice(0, 3);
+
+				setRelatedPosts(related);
+			})
+			.catch((error) => {
+				console.error('Failed to load related posts:', error);
+				setRelatedPosts([]);
+			});
+	}, [postInfo]);
 
 	const confirmDelete = async () => {
 		setIsDeleting(true);
@@ -73,6 +106,7 @@ const PostPage = () => {
 				: `${API_URL}/${postInfo.cover.replace(/\\/g, '/')}`
 			: '';
 		const displayCategory = postInfo.category || DEFAULT_POST_CATEGORY;
+		const displayTags = postInfo.tags || [];
 
 	return (
 		<article className="max-w-6xl mx-auto py-8 animate-in fade-in duration-1000 px-4">
@@ -144,7 +178,7 @@ const PostPage = () => {
 						{postInfo.title}
 					</h1>
 
-				<div className="flex flex-wrap items-center justify-between gap-4 py-6 border-y border-white/10">
+					<div className="flex flex-wrap items-center justify-between gap-4 py-6 border-y border-white/10">
 					<div className="flex items-center gap-3">
 						<div className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-purple-600 shadow-lg" />
 						<div>
@@ -178,10 +212,22 @@ const PostPage = () => {
 							</button>
 						)}
 					</div>
-				</div>
-			</header>
+					</div>
 
-			<div className="rounded-[2.5rem] overflow-hidden bg-white/5 border border-white/10 shadow-2xl backdrop-blur-2xl">
+					{displayTags.length > 0 && (
+						<div className="mt-6 flex flex-wrap gap-3">
+							{displayTags.map((tag) => (
+								<span
+									key={tag}
+									className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-300">
+									#{tag}
+								</span>
+							))}
+						</div>
+					)}
+				</header>
+
+				<div className="rounded-[2.5rem] overflow-hidden bg-white/5 border border-white/10 shadow-2xl backdrop-blur-2xl">
 				<div className="relative w-full aspect-[4/3] sm:aspect-[16/10] md:aspect-auto md:h-[500px] bg-slate-900/60">
 					{coverUrl ? (
 						<img
@@ -213,10 +259,70 @@ const PostPage = () => {
 								  break-words overflow-x-auto"
 						dangerouslySetInnerHTML={{ __html: cleanHTML }}
 					/>
+					</div>
 				</div>
-			</div>
-		</article>
-	);
-};
+
+				{relatedPosts.length > 0 && (
+					<section className="mt-14">
+						<div className="mb-6 flex items-end justify-between gap-4">
+							<div>
+								<p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+									Keep Reading
+								</p>
+								<h2 className="mt-2 text-2xl font-bold text-white">
+									Related Posts
+								</h2>
+							</div>
+							<Link
+								to={`/?category=${encodeURIComponent(displayCategory)}`}
+								className="text-sm font-semibold text-cyan-300 transition hover:text-cyan-200">
+								More in {displayCategory}
+							</Link>
+						</div>
+
+							<div className="grid gap-6 md:grid-cols-3">
+								{relatedPosts.map((post) => {
+									const relatedCoverUrl = post.cover
+										? post.cover.startsWith('http')
+											? post.cover
+											: `${API_URL}/${post.cover.replace(/\\/g, '/')}`
+										: '';
+
+									return (
+										<Link
+										key={post._id}
+										to={`/post/${post._id}`}
+											className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 transition hover:border-cyan-400/30 hover:bg-white/10">
+											<div className="h-44 overflow-hidden bg-slate-900/60">
+												{relatedCoverUrl ? (
+													<img
+														src={relatedCoverUrl}
+														alt={post.title}
+														className="h-full w-full object-cover transition duration-500 hover:scale-105"
+													/>
+												) : (
+													<div className="h-full w-full bg-slate-800/60" />
+												)}
+											</div>
+										<div className="p-5">
+											<p className="mb-3 text-xs font-semibold text-cyan-300">
+												{post.category || DEFAULT_POST_CATEGORY}
+											</p>
+											<h3 className="line-clamp-2 text-lg font-bold text-white">
+												{post.title}
+											</h3>
+											<p className="mt-2 line-clamp-3 text-sm text-slate-400">
+												{post.summary}
+											</p>
+										</div>
+									</Link>
+								);
+							})}
+						</div>
+					</section>
+				)}
+			</article>
+		);
+	};
 
 export default PostPage;

@@ -14,6 +14,7 @@ export default function Post({
 	author,
 	content,
 	category,
+	tags = [],
 }) {
 	const calculateReadTime = (htmlContent) => {
 		if (!htmlContent) return 0;
@@ -87,11 +88,23 @@ export default function Post({
 					</h2>
 				</Link>
 
-				<p className="text-slate-400 text-sm line-clamp-3 leading-relaxed">
-					{summary}
-				</p>
+					<p className="text-slate-400 text-sm line-clamp-3 leading-relaxed">
+						{summary}
+					</p>
 
-				<div className="mt-6 flex items-center justify-between">
+					{tags.length > 0 && (
+						<div className="mt-4 flex flex-wrap gap-2">
+							{tags.slice(0, 3).map((tag) => (
+								<span
+									key={tag}
+									className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
+									#{tag}
+								</span>
+							))}
+						</div>
+					)}
+
+					<div className="mt-6 flex items-center justify-between">
 					<span className="text-[12px] font-mono text-slate-300">
 						Posted By @{author?.username}
 					</span>

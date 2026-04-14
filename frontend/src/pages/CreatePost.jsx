@@ -7,6 +7,7 @@ import {
 	DEFAULT_POST_CATEGORY,
 	POST_CATEGORIES,
 } from '../constants/postCategories';
+import { parseTagInput } from '../utils/postTags';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -15,6 +16,7 @@ export default function CreatePost() {
 	const [summary, setSummary] = useState('');
 	const [content, setContent] = useState('');
 	const [category, setCategory] = useState(DEFAULT_POST_CATEGORY);
+	const [tagInput, setTagInput] = useState('');
 	const [files, setFiles] = useState('');
 	const [redirect, setRedirect] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,8 +56,10 @@ export default function CreatePost() {
 				return;
 			}
 
-		if (!files?.[0]) {
-			const errorMsg = 'Please upload a cover image before publishing.';
+			const parsedTags = parseTagInput(tagInput);
+
+			if (!files?.[0]) {
+				const errorMsg = 'Please upload a cover image before publishing.';
 			setError(errorMsg);
 			toast.error(errorMsg);
 			return;
@@ -63,11 +67,12 @@ export default function CreatePost() {
 
 		setIsSubmitting(true);
 		setError('');
-		const data = new FormData();
+			const data = new FormData();
 			data.set('title', title);
 			data.set('summary', summary);
 			data.set('content', content);
 			data.set('category', category);
+			data.set('tags', parsedTags.join(','));
 			if (files?.[0]) {
 				data.set('file', files[0]);
 			}
@@ -138,9 +143,24 @@ export default function CreatePost() {
 											</option>
 										),
 									)}
-								</select>
+									</select>
+								</div>
+								<div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+									<label className="mb-2 block text-xs uppercase tracking-[0.25em] text-slate-500">
+										Tags
+									</label>
+									<input
+										type="text"
+										value={tagInput}
+										onChange={(ev) => setTagInput(ev.target.value)}
+										placeholder="React, Node.js, Premier League"
+										className="w-full rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400"
+									/>
+									<p className="mt-2 text-xs text-slate-500">
+										Use commas between tags. Up to 8 tags.
+									</p>
+								</div>
 							</div>
-						</div>
 
 					{/* File Upload - Styled as a Dropzone */}
 					<div className="relative group h-32 md:h-full">

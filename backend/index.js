@@ -42,6 +42,10 @@ app.use((err, req, res, next) => {
 	res.status(status).json({ message });
 });
 
-connectToDB(DB_URL);
 
-app.listen(port, () => console.log(`🚀 Server running on port: ${port}`));
+app.listen(port, (err) => {
+	if(err) return console.error('Failed to start server:', err);
+	// connect to DB first, then start server to avoid accepting requests before DB is ready
+	connectToDB(DB_URL);
+	console.log(`🚀 Server running on port: ${port}`)
+});

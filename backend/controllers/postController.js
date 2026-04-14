@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import cloudinary from 'cloudinary';
 import { Post } from '../models/Post.js';
 import jwt from 'jsonwebtoken';
+import { normalizePostCategory } from '../constants/postCategories.js';
 
 dotenv.config();
 
@@ -63,21 +64,22 @@ export const createPost = async (req, res) => {
 		if (err) return res.status(401).json({ message: 'Invalid token' });
 
 		try {
-			const { title, summary, content } = req.body;
-			const imageUrl = req.file?.secure_url || req.file?.url || req.file?.path;
+				const { title, summary, content, category } = req.body;
+				const imageUrl = req.file?.secure_url || req.file?.url || req.file?.path;
 
 			// Check if file was uploaded
 			if (!imageUrl) {
 				return res.status(400).json({ message: 'No image file provided' });
 			}
 
-			const postDoc = await Post.create({
-				title,
-				summary,
-				content,
-				cover: imageUrl,
-				author: info.id,
-			});
+				const postDoc = await Post.create({
+					title,
+					summary,
+					content,
+					category: normalizePostCategory(category),
+					cover: imageUrl,
+					author: info.id,
+				});
 
 			res.status(201).json(postDoc);
 		} catch (error) {
@@ -115,8 +117,8 @@ export const updatePost = async (req, res) => {
 		if (err) return res.status(401).json({ message: 'Invalid token' });
 
 		try {
-			const { id, title, summary, content } = req.body;
-			const postId = req.params.id || id;
+				const { id, title, summary, content, category } = req.body;
+				const postId = req.params.id || id;
 			const postDoc = await Post.findById(postId);
 
 			if (!postDoc) {
@@ -132,7 +134,12 @@ export const updatePost = async (req, res) => {
 			}
 
 			// Prepare update data
-			const updateData = { title, summary, content };
+				const updateData = {
+					title,
+					summary,
+					content,
+					category: normalizePostCategory(category),
+				};
 
 			// If new image uploaded, handle old image deletion and new image URL
 			if (req.file) {

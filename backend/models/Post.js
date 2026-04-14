@@ -1,4 +1,8 @@
 import mongoose from 'mongoose';
+import {
+	DEFAULT_POST_CATEGORY,
+	POST_CATEGORIES,
+} from '../constants/postCategories.js';
 const { Schema } = mongoose;
 
 // Defining a post schema/blueprint
@@ -14,14 +18,21 @@ const postSchema = new mongoose.Schema(
 			required: true,
 			maxlength: [500, 'Summary must be less than 500 characters'],
 		},
-		content: {
-			type: String,
-			required: true,
-			maxlength: [5242880, 'Content must be less than 5MB'],
-		},
-		cover: {
-			type: String,
-			required: true,
+			content: {
+				type: String,
+				required: true,
+				maxlength: [5242880, 'Content must be less than 5MB'],
+			},
+			category: {
+				type: String,
+				enum: POST_CATEGORIES,
+				default: DEFAULT_POST_CATEGORY,
+				required: true,
+				trim: true,
+			},
+			cover: {
+				type: String,
+				required: true,
 		},
 		author: { type: Schema.Types.ObjectId, ref: 'User' },
 	},

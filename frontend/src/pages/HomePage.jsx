@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Post from '../Post';
 import Seo from '../components/Seo';
 import { POST_CATEGORIES } from '../constants/postCategories';
+import { slugifyValue } from '../utils/postFilters';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -46,6 +47,23 @@ const HomePage = () => {
 			.includes(searchQuery.toLowerCase());
 		return matchesCategory && (titleMatch || summaryMatch || authorMatch);
 	});
+
+	const calculateTrendingScore = (post) => {
+		const contentLength = (post.content || '').replace(/<[^>]*>/g, '').length;
+		const tagScore = (post.tags?.length || 0) * 12;
+		const freshnessBoost = Math.max(
+			0,
+			30 - Math.floor((Date.now() - new Date(post.createdAt).getTime()) / 86400000),
+		);
+
+		return contentLength / 180 + tagScore + freshnessBoost;
+	};
+
+	const featuredPost = filteredPosts[0] || null;
+	const trendingPosts = [...filteredPosts]
+		.sort((a, b) => calculateTrendingScore(b) - calculateTrendingScore(a))
+		.filter((post) => post._id !== featuredPost?._id)
+		.slice(0, 4);
 
 	const handleCategoryChange = (category) => {
 		const params = new URLSearchParams(location.search);
@@ -94,8 +112,90 @@ const HomePage = () => {
 					</div>
 				</section>
 
-			{/* 2. Post Grid Container */}
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+				{featuredPost && (
+					<section className="mb-16 grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.9fr)]">
+						<Link
+							to={`/post/${featuredPost._id}`}
+							className="group overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl shadow-cyan-950/20">
+							<div className="relative h-[360px] overflow-hidden bg-slate-900/60">
+								{featuredPost.cover ? (
+									<img
+										src={
+											featuredPost.cover.startsWith('http')
+												? featuredPost.cover
+												: `${API_URL}/${featuredPost.cover.replace(/\\/g, '/')}`
+										}
+										alt={featuredPost.title}
+										className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+									/>
+								) : (
+									<div className="h-full w-full bg-slate-800/60" />
+								)}
+								<div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/50 to-transparent" />
+								<div className="absolute left-6 top-6 inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-cyan-200">
+									Featured Story
+								</div>
+							</div>
+							<div className="p-6 md:p-8">
+								<div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+									<Link
+										to={`/category/${slugifyValue(featuredPost.category || 'General')}`}
+										className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-cyan-300">
+										{featuredPost.category || 'General'}
+									</Link>
+									<span>@{featuredPost.author?.username}</span>
+								</div>
+								<h2 className="max-w-3xl text-3xl font-black leading-tight text-white transition group-hover:text-cyan-200 md:text-4xl">
+									{featuredPost.title}
+								</h2>
+								<p className="mt-4 max-w-3xl text-base leading-8 text-slate-300 md:text-lg">
+									{featuredPost.summary}
+								</p>
+								<div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-cyan-300">
+									Read featured story <span>→</span>
+								</div>
+							</div>
+						</Link>
+
+						<div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-md">
+							<div className="mb-5">
+								<p className="text-xs uppercase tracking-[0.35em] text-slate-500">
+									Trending Now
+								</p>
+								<h3 className="mt-2 text-2xl font-bold text-white">
+									Popular in the feed
+								</h3>
+							</div>
+
+							<div className="space-y-4">
+								{trendingPosts.map((post, index) => (
+									<Link
+										key={post._id}
+										to={`/post/${post._id}`}
+										className="flex items-start gap-4 rounded-2xl border border-white/10 bg-slate-950/20 p-4 transition hover:border-cyan-400/30 hover:bg-white/5">
+										<span className="w-8 text-lg font-black text-slate-600">
+											{String(index + 1).padStart(2, '0')}
+										</span>
+										<div className="min-w-0">
+											<p className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
+												{post.category || 'General'}
+											</p>
+											<h4 className="line-clamp-2 text-base font-semibold text-white">
+												{post.title}
+											</h4>
+											<p className="mt-2 text-sm text-slate-400">
+												@{post.author?.username}
+											</p>
+										</div>
+									</Link>
+								))}
+							</div>
+						</div>
+					</section>
+				)}
+
+				{/* 2. Post Grid Container */}
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 				{filteredPosts.length > 0 ? (
 					filteredPosts.map((post) => (
 						<Post key={post._id || Math.random()} {...post} />

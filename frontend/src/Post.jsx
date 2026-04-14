@@ -25,10 +25,11 @@ export default function Post({
 		return minutes;
 	};
 
-	// 1. PLACE LOGIC HERE
-		const readTime = calculateReadTime(content);
-		const displayCategory = category || DEFAULT_POST_CATEGORY;
-		const coverUrl = cover
+	const readTime = calculateReadTime(content);
+	const readTimeLabel =
+		readTime <= 1 ? '1 min read' : `${readTime} mins read`;
+	const displayCategory = category || DEFAULT_POST_CATEGORY;
+	const coverUrl = cover
 		? cover.startsWith('http')
 			? cover
 			: `${API_URL}/${cover.replace(/\\/g, '/')}`
@@ -61,8 +62,8 @@ export default function Post({
 								@{author?.username} - The Blogger
 							</span>
 						{/* Added Read Time here for a professional look */}
-						<div className="flex items-center gap-1 text-[10px] font-mono text-cyan-500/60 tracking-widest mt-1">
-							<svg
+							<div className="flex items-center gap-1 text-[10px] font-mono text-cyan-500/60 tracking-widest mt-1">
+								<svg
 								className="w-3 h-3"
 								fill="none"
 								stroke="currentColor"
@@ -71,11 +72,11 @@ export default function Post({
 									strokeLinecap="round"
 									strokeLinejoin="round"
 									strokeWidth="2"
-									d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-								/>
-							</svg>
-							<span className="text-[13px]">{readTime} Minutes(s) Read</span>
-						</div>
+										d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+									/>
+								</svg>
+								<span className="text-[13px]">{readTimeLabel}</span>
+							</div>
 					</div>
 
 					<time className="text-xs text-slate-500">

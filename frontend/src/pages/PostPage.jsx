@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast';
 import DOMPurify from 'dompurify';
 import DataSpinner from '../assets/dataSpinner/DataSpinner';
 import SmallSpinner from '../assets/smallSpinner/SmallSpinner';
+import { DEFAULT_POST_CATEGORY } from '../constants/postCategories';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -66,11 +67,12 @@ const PostPage = () => {
 	const cleanHTML = postInfo.content
 		? DOMPurify.sanitize(postInfo.content)
 		: '';
-	const coverUrl = postInfo?.cover
-		? postInfo.cover.startsWith('http')
-			? postInfo.cover
-			: `${API_URL}/${postInfo.cover.replace(/\\/g, '/')}`
-		: '';
+		const coverUrl = postInfo?.cover
+			? postInfo.cover.startsWith('http')
+				? postInfo.cover
+				: `${API_URL}/${postInfo.cover.replace(/\\/g, '/')}`
+			: '';
+		const displayCategory = postInfo.category || DEFAULT_POST_CATEGORY;
 
 	return (
 		<article className="max-w-6xl mx-auto py-8 animate-in fade-in duration-1000 px-4">
@@ -132,10 +134,15 @@ const PostPage = () => {
 				<FaChevronLeft size={12} /> Back to stories
 			</Link>
 
-			<header className="mb-10">
-				<h1 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tight leading-tight break-words">
-					{postInfo.title}
-				</h1>
+				<header className="mb-10">
+					<Link
+						to={`/?category=${encodeURIComponent(displayCategory)}`}
+						className="mb-5 inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-1.5 text-xs font-semibold text-cyan-300 transition hover:border-cyan-300/40 hover:bg-cyan-400/15">
+						{displayCategory}
+					</Link>
+					<h1 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tight leading-tight break-words">
+						{postInfo.title}
+					</h1>
 
 				<div className="flex flex-wrap items-center justify-between gap-4 py-6 border-y border-white/10">
 					<div className="flex items-center gap-3">

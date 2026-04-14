@@ -3,6 +3,10 @@ import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import QuillEditor from '../QuillEditor';
 import SmallSpinner from '../assets/smallSpinner/SmallSpinner';
+import {
+	DEFAULT_POST_CATEGORY,
+	POST_CATEGORIES,
+} from '../constants/postCategories';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -10,6 +14,7 @@ export default function CreatePost() {
 	const [title, setTitle] = useState('');
 	const [summary, setSummary] = useState('');
 	const [content, setContent] = useState('');
+	const [category, setCategory] = useState(DEFAULT_POST_CATEGORY);
 	const [files, setFiles] = useState('');
 	const [redirect, setRedirect] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,13 +39,20 @@ export default function CreatePost() {
 		e.preventDefault();
 		if (isSubmitting) return;
 
-		if (!title.trim() || !summary.trim() || !content.trim()) {
-			const errorMsg =
-				'Please fill in the title, summary, and article content before publishing.';
-			setError(errorMsg);
-			toast.error(errorMsg);
-			return;
-		}
+			if (!title.trim() || !summary.trim() || !content.trim()) {
+				const errorMsg =
+					'Please fill in the title, summary, and article content before publishing.';
+				setError(errorMsg);
+				toast.error(errorMsg);
+				return;
+			}
+
+			if (!category) {
+				const errorMsg = 'Please choose a category before publishing.';
+				setError(errorMsg);
+				toast.error(errorMsg);
+				return;
+			}
 
 		if (!files?.[0]) {
 			const errorMsg = 'Please upload a cover image before publishing.';
@@ -52,12 +64,13 @@ export default function CreatePost() {
 		setIsSubmitting(true);
 		setError('');
 		const data = new FormData();
-		data.set('title', title);
-		data.set('summary', summary);
-		data.set('content', content);
-		if (files?.[0]) {
-			data.set('file', files[0]);
-		}
+			data.set('title', title);
+			data.set('summary', summary);
+			data.set('content', content);
+			data.set('category', category);
+			if (files?.[0]) {
+				data.set('file', files[0]);
+			}
 
 		try {
 			const response = await fetch(`${API_URL}/post`, {
@@ -101,16 +114,33 @@ export default function CreatePost() {
 					onChange={(ev) => setTitle(ev.target.value)}
 				/>
 
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-					{/* Summary - Glass Card */}
-					<div className="md:col-span-2 space-y-4">
-						<textarea
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+						{/* Summary - Glass Card */}
+						<div className="md:col-span-2 space-y-4">
+							<textarea
 							placeholder="What's this story about?"
 							className="w-full h-32 p-6 rounded-3xl bg-white/5 border border-white/10 text-slate-300 placeholder-slate-500 outline-none focus:bg-white/10 transition-all resize-none"
 							value={summary}
-							onChange={(ev) => setSummary(ev.target.value)}
-						/>
-					</div>
+								onChange={(ev) => setSummary(ev.target.value)}
+							/>
+							<div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+								<label className="mb-2 block text-xs uppercase tracking-[0.25em] text-slate-500">
+									Category
+								</label>
+								<select
+									value={category}
+									onChange={(ev) => setCategory(ev.target.value)}
+									className="w-full rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400">
+									{POST_CATEGORIES.filter((item) => item !== 'All').map(
+										(item) => (
+											<option key={item} value={item}>
+												{item}
+											</option>
+										),
+									)}
+								</select>
+							</div>
+						</div>
 
 					{/* File Upload - Styled as a Dropzone */}
 					<div className="relative group h-32 md:h-full">

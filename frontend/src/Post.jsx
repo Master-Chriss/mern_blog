@@ -1,5 +1,6 @@
 import { formatISO9075 } from 'date-fns';
 import { Link } from 'react-router-dom';
+import { DEFAULT_POST_CATEGORY } from './constants/postCategories';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -12,6 +13,7 @@ export default function Post({
 	createdAt,
 	author,
 	content,
+	category,
 }) {
 	const calculateReadTime = (htmlContent) => {
 		if (!htmlContent) return 0;
@@ -22,8 +24,9 @@ export default function Post({
 	};
 
 	// 1. PLACE LOGIC HERE
-	const readTime = calculateReadTime(content);
-	const coverUrl = cover
+		const readTime = calculateReadTime(content);
+		const displayCategory = category || DEFAULT_POST_CATEGORY;
+		const coverUrl = cover
 		? cover.startsWith('http')
 			? cover
 			: `${API_URL}/${cover.replace(/\\/g, '/')}`
@@ -44,12 +47,17 @@ export default function Post({
 			</Link>
 
 			<div className="p-6">
-				<div className="flex items-center justify-between mb-3">
-					{/* 2. PLACE UI HERE (Next to Author) */}
-					<div className="flex flex-col">
-						<span className="text-xs font-medium text-cyan-400 tracking-tighter">
-							@{author?.username} - The Blogger
-						</span>
+					<div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+						{/* 2. PLACE UI HERE (Next to Author) */}
+						<div className="flex flex-col">
+							<Link
+								to={`/?category=${encodeURIComponent(displayCategory)}`}
+								className="mb-2 inline-flex w-fit rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[11px] font-semibold text-cyan-300 transition hover:border-cyan-300/40 hover:bg-cyan-400/15">
+								{displayCategory}
+							</Link>
+							<span className="text-xs font-medium text-cyan-400 tracking-tighter">
+								@{author?.username} - The Blogger
+							</span>
 						{/* Added Read Time here for a professional look */}
 						<div className="flex items-center gap-1 text-[10px] font-mono text-cyan-500/60 tracking-widest mt-1">
 							<svg

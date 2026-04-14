@@ -5,6 +5,10 @@ import QuillEditor from '../QuillEditor';
 import DataSpinner from '../assets/dataSpinner/DataSpinner';
 import SmallSpinner from '../assets/smallSpinner/SmallSpinner';
 import { UserContext } from '../UserContext';
+import {
+	DEFAULT_POST_CATEGORY,
+	POST_CATEGORIES,
+} from '../constants/postCategories';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -14,6 +18,7 @@ const EditPage = () => {
 	const [title, setTitle] = useState('');
 	const [summary, setSummary] = useState('');
 	const [content, setContent] = useState('');
+	const [category, setCategory] = useState(DEFAULT_POST_CATEGORY);
 	const [files, setFiles] = useState('');
 	const [redirect, setRedirect] = useState(false);
 	const [loading, setLoading] = useState(true);
@@ -60,11 +65,12 @@ const EditPage = () => {
 					return;
 				}
 
-				setTitle(postInfo.title);
-				setSummary(postInfo.summary);
-				setContent(postInfo.content);
-				setError(null);
-				setUnauthorizedError(null);
+					setTitle(postInfo.title);
+					setSummary(postInfo.summary);
+					setContent(postInfo.content);
+					setCategory(postInfo.category || DEFAULT_POST_CATEGORY);
+					setError(null);
+					setUnauthorizedError(null);
 				setLoading(false);
 			})
 			.catch((err) => {
@@ -79,11 +85,12 @@ const EditPage = () => {
 		if (isUpdating) return; // Prevent double clicks
 
 		const data = new FormData();
-		data.set('title', title);
-		data.set('summary', summary);
-		data.set('content', content);
-		data.set('id', id);
-		if (files?.[0]) data.set('file', files?.[0]);
+			data.set('title', title);
+			data.set('summary', summary);
+			data.set('content', content);
+			data.set('category', category);
+			data.set('id', id);
+			if (files?.[0]) data.set('file', files?.[0]);
 
 		setIsUpdating(true);
 
@@ -170,16 +177,33 @@ const EditPage = () => {
 					className="w-full bg-transparent text-5xl md:text-7xl font-black text-white placeholder:text-white/30 outline-none border-none mb-4 focus:text-white transition-all"
 				/>
 
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-					{/* Summary Box */}
-					<div className="md:col-span-2">
-						<textarea
-							value={summary}
-							onChange={(ev) => setSummary(ev.target.value)}
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+						{/* Summary Box */}
+						<div className="md:col-span-2 space-y-4">
+							<textarea
+								value={summary}
+								onChange={(ev) => setSummary(ev.target.value)}
 							placeholder="What's this story about?"
-							className="w-full h-full min-h-[160px] bg-[#1a1b4b]/40 border border-white/5 rounded-[2rem] p-6 text-gray-300 placeholder:text-gray-600 focus:outline-none focus:bg-[#1a1b4b]/60 transition-all resize-none text-lg"
-						/>
-					</div>
+								className="w-full h-full min-h-[160px] bg-[#1a1b4b]/40 border border-white/5 rounded-[2rem] p-6 text-gray-300 placeholder:text-gray-600 focus:outline-none focus:bg-[#1a1b4b]/60 transition-all resize-none text-lg"
+							/>
+							<div className="rounded-[2rem] border border-white/10 bg-[#1a1b4b]/30 p-5">
+								<label className="mb-2 block text-xs uppercase tracking-[0.25em] text-slate-500">
+									Category
+								</label>
+								<select
+									value={category}
+									onChange={(ev) => setCategory(ev.target.value)}
+									className="w-full rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400">
+									{POST_CATEGORIES.filter((item) => item !== 'All').map(
+										(item) => (
+											<option key={item} value={item}>
+												{item}
+											</option>
+										),
+									)}
+								</select>
+							</div>
+						</div>
 
 					{/* Upload Box */}
 					<label className="border-2 border-dashed border-white/10 rounded-[2rem] flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white/5 transition-all text-gray-500 bg-[#1a1b4b]/20 group">

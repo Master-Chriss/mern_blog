@@ -15,6 +15,7 @@ import {
 import { toast } from 'react-hot-toast';
 import DOMPurify from 'dompurify';
 import { UserContext } from '../UserContext';
+import ConfirmationDialog from '../components/ConfirmationDialog';
 import DataSpinner from '../assets/dataSpinner/DataSpinner';
 import SmallSpinner from '../assets/smallSpinner/SmallSpinner';
 import { DEFAULT_POST_CATEGORY } from '../constants/postCategories';
@@ -36,6 +37,7 @@ const PostPage = () => {
 	const [isSubmittingReply, setIsSubmittingReply] = useState(false);
 	const [likingCommentId, setLikingCommentId] = useState(null);
 	const [postUrl, setPostUrl] = useState('');
+	const [pendingAction, setPendingAction] = useState(null);
 
 	const { userInfo } = useContext(UserContext);
 	const { id } = useParams();
@@ -321,6 +323,35 @@ const PostPage = () => {
 		}
 	};
 
+	const openDeleteCommentConfirm = (comment) => {
+		setPendingAction({
+			title: 'Delete this comment?',
+			message:
+				'This will remove the comment and all replies beneath it from the discussion.',
+			confirmLabel: 'Delete Comment',
+			onCancel: () => setPendingAction(null),
+			onConfirm: async () => {
+				await removeComment(comment._id);
+				setPendingAction(null);
+			},
+			isSubmitting: deletingCommentId === comment._id,
+		});
+	};
+
+	const openDeleteReplyConfirm = (parentCommentId, reply) => {
+		setPendingAction({
+			title: 'Delete this reply?',
+			message: 'This reply will be removed from the conversation immediately.',
+			confirmLabel: 'Delete Reply',
+			onCancel: () => setPendingAction(null),
+			onConfirm: async () => {
+				await deleteReply(parentCommentId, reply._id);
+				setPendingAction(null);
+			},
+			isSubmitting: deletingCommentId === reply._id,
+		});
+	};
+
 	if (!postInfo) {
 		return (
 			<div
@@ -349,56 +380,28 @@ const PostPage = () => {
 
 	return (
 		<article className="mx-auto max-w-6xl animate-in fade-in px-4 py-8 duration-1000">
-			{showModal && (
-				<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
-					<div className="relative w-full max-w-sm overflow-hidden rounded-[2.5rem] border border-white/10 bg-[#1a1b4b] p-8 shadow-2xl">
-						{isSuccess && (
-							<div className="absolute inset-0 z-10 flex animate-in fade-in flex-col items-center justify-center bg-cyan-500 duration-300">
-								<div className="flex h-16 w-16 animate-bounce items-center justify-center rounded-full bg-white">
-									<svg
-										className="h-8 w-8 text-cyan-500"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-										strokeWidth={3}>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											d="m4.5 12.75 6 6 9-13.5"
-										/>
-									</svg>
-								</div>
-								<p className="mt-4 text-white">Deleted</p>
-							</div>
-						)}
-
-						<h2 className="mb-6 text-center text-2xl font-black text-white">
-							Are you sure?
-						</h2>
-						<div className="flex gap-3">
-							<button
-								disabled={isDeleting}
-								onClick={() => setShowModal(false)}
-								className="flex-1 rounded-xl bg-white/5 py-3 font-bold text-white transition-all hover:bg-white/10">
-								Cancel
-							</button>
-							<button
-								disabled={isDeleting}
-								onClick={confirmDelete}
-								aria-label={isDeleting ? 'Deleting post' : 'Delete post button'}
-								className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 py-3 font-bold text-white transition-all hover:bg-red-700">
-								{isDeleting ? (
-									<>
-										<SmallSpinner /> Deleting...
-									</>
-								) : (
-									'Delete'
-								)}
-							</button>
-						</div>
-					</div>
-				</div>
-			)}
+			<ConfirmationDialog
+				open={showModal}
+				title="Delete this story permanently?"
+				message={`"${postInfo.title}" will be removed for every reader, and its related cover image will be deleted as well.`}
+				confirmLabel="Delete Story"
+				isSubmitting={isDeleting}
+				onCancel={() => setShowModal(false)}
+				onConfirm={confirmDelete}
+				tone="danger"
+				eyebrow="Sensitive Action"
+			/>
+			<ConfirmationDialog
+				open={Boolean(pendingAction)}
+				title={pendingAction?.title}
+				message={pendingAction?.message}
+				confirmLabel={pendingAction?.confirmLabel}
+				isSubmitting={pendingAction?.isSubmitting}
+				onCancel={pendingAction?.onCancel}
+				onConfirm={pendingAction?.onConfirm}
+				tone="danger"
+				eyebrow="Discussion Moderation"
+			/>
 
 			<Link
 				to="/"
@@ -680,11 +683,11 @@ const PostPage = () => {
 												{formatISO9075(new Date(comment.createdAt))}
 											</p>
 										</div>
-										{canDeleteComment && (
-											<button
-												type="button"
-												onClick={() => removeComment(comment._id)}
-												disabled={deletingCommentId === comment._id}
+											{canDeleteComment && (
+												<button
+													type="button"
+													onClick={() => openDeleteCommentConfirm(comment)}
+													disabled={deletingCommentId === comment._id}
 												className="text-sm font-semibold text-red-400 transition hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50">
 												{deletingCommentId === comment._id
 													? 'Deleting...'
@@ -782,13 +785,13 @@ const PostPage = () => {
 																		{formatISO9075(new Date(reply.createdAt))}
 																	</p>
 																</div>
-																{canDeleteReply && (
-																	<button
-																		type="button"
-																		onClick={() =>
-																			deleteReply(comment._id, reply._id)
-																		}
-																		disabled={deletingCommentId === reply._id}
+																	{canDeleteReply && (
+																		<button
+																			type="button"
+																			onClick={() =>
+																				openDeleteReplyConfirm(comment._id, reply)
+																			}
+																			disabled={deletingCommentId === reply._id}
 																		className="text-sm font-semibold text-red-400 transition hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50">
 																		{deletingCommentId === reply._id
 																			? 'Deleting...'

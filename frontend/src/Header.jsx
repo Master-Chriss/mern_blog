@@ -1,18 +1,18 @@
-import { useContext } from 'react';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { UserContext } from './UserContext';
+import ConfirmationDialog from './components/ConfirmationDialog';
 import {
+	FaBars,
+	FaPlus,
 	FaSearch,
 	FaSignInAlt,
 	FaSignOutAlt,
-	FaPlus,
-	FaUserPlus,
-	FaUserCircle,
-	FaBars,
-	FaTimes,
 	FaTachometerAlt,
+	FaTimes,
+	FaUserCircle,
+	FaUserPlus,
 } from 'react-icons/fa';
 import blogLogo from './assets/Logo/new-gen-logo-cropped.png';
 
@@ -23,6 +23,8 @@ const Header = () => {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 	const [searchOpen, setSearchOpen] = useState(false);
+	const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+	const [isLoggingOut, setIsLoggingOut] = useState(false);
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -36,6 +38,7 @@ const Header = () => {
 	}, []);
 
 	const logout = async () => {
+		setIsLoggingOut(true);
 		try {
 			const response = await fetch(`${API_URL}/auth/logout`, {
 				credentials: 'include',
@@ -48,10 +51,13 @@ const Header = () => {
 
 			setUserInfo(null);
 			setMobileMenuOpen(false);
-			toast.success('Logged out successfully! 👋');
+			setShowLogoutConfirm(false);
+			toast.success('Logged out successfully');
 		} catch (error) {
 			console.error('Logout failed:', error);
 			toast.error('Logout failed');
+		} finally {
+			setIsLoggingOut(false);
 		}
 	};
 
@@ -65,44 +71,50 @@ const Header = () => {
 
 	return (
 		<>
-			{/* FIXED NAVBAR WITH SAME MARGINS AS POST CONTENT */}
-			<div className="fixed top-0 left-0 right-0 z-50 bg-[#0f172a]/95 backdrop-blur-md border-b border-white/10">
-				{/* CONTAINER - MATCHES YOUR HOMEPAGE max-w-7xl AND mx-auto */}
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<ConfirmationDialog
+				open={showLogoutConfirm}
+				title="Log out of your account?"
+				message="You will need to sign in again to create posts, leave comments, or perform admin actions."
+				confirmLabel="Log Out"
+				tone="warning"
+				isSubmitting={isLoggingOut}
+				onCancel={() => setShowLogoutConfirm(false)}
+				onConfirm={logout}
+			/>
+
+			<div className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#0f172a]/95 backdrop-blur-md">
+				<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 					<div className="py-3">
 						<div className="flex items-center justify-between">
-							{/* Logo */}
 							<Link
 								to="/"
-								className="text-xl sm:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400 whitespace-nowrap"
+								className="whitespace-nowrap bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-xl font-black text-transparent sm:text-2xl"
 								onClick={() => setMobileMenuOpen(false)}>
 								<img
 									src={blogLogo}
-									class="h-10 w-auto object-contain"
+									className="h-10 w-auto object-contain"
 									alt="Logo"
 								/>
 							</Link>
 
-							{/* Desktop Search - Hidden on mobile */}
-							<div className="hidden md:block flex-1 max-w-xl mx-4">
+							<div className="mx-4 hidden max-w-xl flex-1 md:block">
 								<div className="relative">
 									<input
 										type="text"
 										placeholder="Search stories..."
 										value={searchQuery}
 										onChange={handleInstantSearch}
-										className="w-full py-2 px-4 pl-10 rounded-xl bg-white/10 border border-white/10 text-white placeholder-slate-500 outline-none focus:bg-white/20 text-sm"
+										className="w-full rounded-xl border border-white/10 bg-white/10 py-2 px-4 pl-10 text-sm text-white placeholder-slate-500 outline-none focus:bg-white/20"
 									/>
-									<FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+									<FaSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
 								</div>
 							</div>
 
-							{/* Desktop Menu - Hidden on mobile */}
-							<div className="hidden md:flex items-center gap-4">
-								{username && (
+							<div className="hidden items-center gap-4 md:flex">
+								{username ? (
 									<>
-										<div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10">
-											<FaUserCircle className="text-cyan-400 w-4 h-4" />
+										<div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
+											<FaUserCircle className="h-4 w-4 text-cyan-400" />
 											<span className="text-sm text-white/90">{username}</span>
 											{userInfo.role !== 'reader' && (
 												<span className="text-xs text-blue-300">
@@ -114,85 +126,77 @@ const Header = () => {
 											<Link
 												to="/create"
 												className="text-sm text-slate-300 hover:text-cyan-400">
-												<FaPlus className="inline mr-1" /> Create
+												<FaPlus className="mr-1 inline" /> Create
 											</Link>
 										)}
 										<button
-											onClick={logout}
+											onClick={() => setShowLogoutConfirm(true)}
 											className="text-sm text-red-600 hover:text-red-400">
-											<FaSignOutAlt className="inline mr-1" /> Logout
+											<FaSignOutAlt className="mr-1 inline" /> Logout
 										</button>
 									</>
-								)}
-								{!username && (
+								) : (
 									<>
 										<Link
 											to="/login"
 											className="text-sm text-slate-300 hover:text-cyan-400">
-											<FaSignInAlt className="inline mr-1" /> Login
+											<FaSignInAlt className="mr-1 inline" /> Login
 										</Link>
 										<Link
 											to="/register"
 											className="text-sm text-slate-300 hover:text-cyan-400">
-											<FaUserPlus className="inline mr-1" /> Register
+											<FaUserPlus className="mr-1 inline" /> Register
 										</Link>
 									</>
 								)}
 								{userInfo?.role === 'admin' && (
 									<Link
 										to="/admin"
-										className="text-sm text-green-800 font-bold hover:text-cyan-400">
-										<FaTachometerAlt className="inline mr-1" fill="green" />
+										className="text-sm font-bold text-green-800 hover:text-cyan-400">
+										<FaTachometerAlt className="mr-1 inline" fill="green" />
 										Dashboard
 									</Link>
 								)}
 							</div>
 
-							{/* MOBILE ICONS */}
-							<div className="flex md:hidden items-center gap-2">
+							<div className="flex items-center gap-2 md:hidden">
 								<button
 									onClick={() => setSearchOpen(!searchOpen)}
-									className="text-slate-300 p-2">
+									className="p-2 text-slate-300">
 									<FaSearch size={18} />
 								</button>
 								<button
 									onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-									className="text-white p-2 rounded-lg bg-white/10">
-									{mobileMenuOpen ? (
-										<FaTimes size={18} />
-									) : (
-										<FaBars size={18} />
-									)}
+									className="rounded-lg bg-white/10 p-2 text-white">
+									{mobileMenuOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
 								</button>
 							</div>
 						</div>
 
-						{/* MOBILE SEARCH BAR */}
 						{searchOpen && (
-							<div className="md:hidden mt-2 pb-2">
+							<div className="mt-2 pb-2 md:hidden">
 								<input
 									type="text"
 									placeholder="Search stories..."
 									value={searchQuery}
 									onChange={handleInstantSearch}
-									className="w-full py-2 px-4 pl-10 rounded-xl bg-white/10 border border-white/10 text-white placeholder-slate-500 outline-none focus:bg-white/20 text-sm"
+									className="w-full rounded-xl border border-white/10 bg-white/10 py-2 px-4 pl-10 text-sm text-white placeholder-slate-500 outline-none focus:bg-white/20"
 									autoFocus
 								/>
 							</div>
 						)}
 					</div>
 
-					{/* MOBILE MENU DROPDOWN */}
 					{mobileMenuOpen && (
-						<div className="md:hidden bg-[#0f172a]/95 pb-3">
+						<div className="bg-[#0f172a]/95 pb-3 md:hidden">
 							<nav className="flex flex-col gap-2">
-								{username && (
+								{username ? (
 									<>
-										<div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5">
-											<FaUserCircle className="text-cyan-400 w-5 h-5" />
+										<div className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2">
+											<FaUserCircle className="h-5 w-5 text-cyan-400" />
 											<span className="text-sm text-white/90">{username}</span>
 											{userInfo.role !== 'reader' && (
-												<span className="text-xs text-blue-300 ml-auto">
+												<span className="ml-auto text-xs text-blue-300">
 													({userInfo.role})
 												</span>
 											)}
@@ -201,38 +205,37 @@ const Header = () => {
 											<Link
 												to="/create"
 												onClick={() => setMobileMenuOpen(false)}
-												className="text-sm text-slate-300 hover:text-cyan-400 py-2 px-3 hover:bg-white/5 rounded-lg">
-												<FaPlus className="inline mr-2" /> Create New Post
+												className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-cyan-400">
+												<FaPlus className="mr-2 inline" /> Create New Post
 											</Link>
 										)}
 										{userInfo?.role === 'admin' && (
 											<Link
 												to="/admin"
 												onClick={() => setMobileMenuOpen(false)}
-												className="text-sm text-slate-300 hover:text-cyan-400 py-2 px-3 hover:bg-white/5 rounded-lg">
-												📊 Dashboard
+												className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-cyan-400">
+												<FaTachometerAlt className="mr-2 inline" /> Dashboard
 											</Link>
 										)}
 										<button
-											onClick={logout}
-											className="text-sm text-red-600 hover:text-red-400 py-2 px-3 hover:bg-white/5 rounded-lg text-left">
-											<FaSignOutAlt className="inline mr-2" /> Logout
+											onClick={() => setShowLogoutConfirm(true)}
+											className="rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-white/5 hover:text-red-400">
+											<FaSignOutAlt className="mr-2 inline" /> Logout
 										</button>
 									</>
-								)}
-								{!username && (
+								) : (
 									<>
 										<Link
 											to="/login"
 											onClick={() => setMobileMenuOpen(false)}
-											className="text-sm text-slate-300 hover:text-cyan-400 py-2 px-3 hover:bg-white/5 rounded-lg">
-											<FaSignInAlt className="inline mr-2" /> Login
+											className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-cyan-400">
+											<FaSignInAlt className="mr-2 inline" /> Login
 										</Link>
 										<Link
 											to="/register"
 											onClick={() => setMobileMenuOpen(false)}
-											className="text-sm text-slate-300 hover:text-cyan-400 py-2 px-3 hover:bg-white/5 rounded-lg">
-											<FaUserPlus className="inline mr-2" /> Register
+											className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-cyan-400">
+											<FaUserPlus className="mr-2 inline" /> Register
 										</Link>
 									</>
 								)}
@@ -242,7 +245,6 @@ const Header = () => {
 				</div>
 			</div>
 
-			{/* SPACER - Same height as navbar */}
 			<div className="h-[60px] md:h-[70px]" />
 		</>
 	);

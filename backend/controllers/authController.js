@@ -4,11 +4,13 @@ import jwt from 'jsonwebtoken';
 
 const salt = bcrypt.genSaltSync(10);
 const secret = process.env.JWT_SECRET;
-const tokenCookieOptions = {
+const isProduction = process.env.NODE_ENV === 'production';
+
+const getTokenCookieOptions = () => ({
 	httpOnly: true,
-	sameSite: 'none',
-	secure: true,
-};
+	sameSite: isProduction ? 'none' : 'lax',
+	secure: isProduction,
+});
 
 export const register = async (req, res) => {
 	const { username, email, password } = req.body;
@@ -53,12 +55,12 @@ export const login = async (req, res) => {
 		secret,
 		{},
 		(err, token) => {
-			if (err) throw err;
-			res
-				.cookie('token', token, tokenCookieOptions)
-				.json({
-					id: user._id,
-					username: user.username,
+				if (err) throw err;
+				res
+					.cookie('token', token, getTokenCookieOptions())
+					.json({
+						id: user._id,
+						username: user.username,
 					role: user.role,
 				});
 		},
@@ -80,7 +82,7 @@ export const fetchProfile = (req, res) => {
 };
 
 export const logout = (req, res) => {
-	res.clearCookie('token', tokenCookieOptions).json('ok');
+	res.clearCookie('token', getTokenCookieOptions()).json('ok');
 };
 
 // TODO: Admin Dashboard Controllers

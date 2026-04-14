@@ -8,6 +8,7 @@ import connectToDB from './db/connectDB.js';
 import authRoutes from './routes/authRoute.js';
 import postRoutes from './routes/postRoute.js';
 import newsletterRoutes from './routes/newsletterRoute.js';
+import commentRoutes from './routes/commentRoute.js';
 
 const app = express();
 const port = process.env.PORT;
@@ -30,6 +31,7 @@ app.use(cookieParser());
 app.use('/auth', authRoutes);
 app.use('/post', postRoutes);
 app.use('/newsletter', newsletterRoutes);
+app.use('/comments', commentRoutes);
 
 // Central error handler so API errors return JSON (including multer/cloudinary failures)
 app.use((err, req, res, next) => {

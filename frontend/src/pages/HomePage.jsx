@@ -80,14 +80,14 @@ const HomePage = () => {
 	return (
 			<main className="max-w-7xl mx-auto px-8 py-12">
 				<Seo
-					title="New Generation Latest News | Explore Our Latest Stories"
-					description="Discover fresh stories across technology, entertainment, sports, lifestyle, business, and more from New Generation Latest News."
+					title="New Generation Latest News | Explore Our Latest Trending News"
+					description="Discover the latest stories across technology, entertainment, sports, lifestyle, business, and more from New Generation Latest News."
 					pathname={location.pathname + location.search}
 				/>
 				{/* 1. Modern Hero Section */}
 				<section className="mb-20 text-center space-y-4">
 					<h1 className="text-3xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400">
-						Explore Our Latest Stories
+						Explore Our Latest Trending News
 					</h1>
 					<p className="text-slate-400 text-xl max-w-2xl mx-auto">
 						Technology, lifestyle, insights, entertainment and ideas. Fresh perspectives from curious minds of our talented <span className="font-bold text-slate-50">Authors</span>  .

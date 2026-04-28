@@ -33,7 +33,7 @@ app.use('/post', postRoutes);
 app.use('/newsletter', newsletterRoutes);
 app.use('/comments', commentRoutes);
 
-// Central error handler so API errors return JSON (including multer/cloudinary failures)
+// Central error handler so API errors return JSON (including cloudinary failures)
 app.use((err, req, res, next) => {
 	console.error('Unhandled API error:', err);
 	const status = err?.status || err?.statusCode || 500;

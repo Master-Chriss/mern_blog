@@ -9,6 +9,6 @@ const userSchema = new mongoose.Schema({
 		enum: ['admin', 'author', 'reader'],
 		default: 'reader',
 	},
-});
+}, { timestamps: true });
 
 export const User = mongoose.model('User', userSchema);

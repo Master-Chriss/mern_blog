@@ -16,6 +16,7 @@
     "dompurify": "^3.3.1",
     "emailjs-com": "^3.2.0",
     "framer-motion": "^12.23.12",
+    "lucide-react": "^1.14.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hot-toast": "^2.6.0",

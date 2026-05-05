@@ -77,6 +77,10 @@ const HomePage = () => {
 		navigate(nextSearch ? `/?${nextSearch}` : '/');
 	};
 
+	const goToPost = (postId) => {
+		navigate(`/post/${postId}`);
+	};
+
 	return (
 			<main className="max-w-7xl mx-auto px-8 py-12">
 				<Seo
@@ -114,9 +118,17 @@ const HomePage = () => {
 
 				{featuredPost && (
 					<section className="mb-16 grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.9fr)]">
-						<Link
-							to={`/post/${featuredPost._id}`}
-							className="group overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl shadow-cyan-950/20">
+						<article
+							role="link"
+							tabIndex={0}
+							onClick={() => goToPost(featuredPost._id)}
+							onKeyDown={(event) => {
+								if (event.key === 'Enter' || event.key === ' ') {
+									event.preventDefault();
+									goToPost(featuredPost._id);
+								}
+							}}
+							className="group cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl shadow-cyan-950/20">
 							<div className="relative h-[360px] overflow-hidden bg-slate-900/60">
 								{featuredPost.cover ? (
 									<img
@@ -137,14 +149,14 @@ const HomePage = () => {
 								</div>
 							</div>
 							<div className="p-6 md:p-8">
-								<div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-slate-400">
-									<Link
-										to={`/category/${slugifyValue(featuredPost.category || 'General')}`}
-										className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-cyan-300">
-										{featuredPost.category || 'General'}
-									</Link>
-									<span>@{featuredPost.author?.username}</span>
-								</div>
+									<div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+										<Link
+											to={`/category/${slugifyValue(featuredPost.category || 'General')}`}
+											className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-cyan-300">
+											{featuredPost.category || 'General'}
+										</Link>
+										<span>@{featuredPost.author?.username}</span>
+									</div>
 								<h2 className="max-w-3xl text-3xl font-black leading-tight text-white transition group-hover:text-cyan-200 md:text-4xl">
 									{featuredPost.title}
 								</h2>
@@ -155,7 +167,7 @@ const HomePage = () => {
 									Read featured story <span>→</span>
 								</div>
 							</div>
-						</Link>
+							</article>
 
 						<div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-md">
 							<div className="mb-5">

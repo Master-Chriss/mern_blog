@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import SmallSpinner from '../assets/smallSpinner/SmallSpinner';
 
 const Footer = () => {
 	const [email, setEmail] = useState('');
 	const [isSubscribing, setIsSubscribing] = useState(false);
+	const location = useLocation();
+	const isAdminPage = location.pathname === '/admin';
 
 	const handleSubscribe = async (e) => {
 		e.preventDefault();
@@ -62,7 +64,12 @@ const Footer = () => {
 	const currentYear = new Date().getFullYear();
 
 	return (
-		<footer className="bg-slate-900/50 border-t border-white/10 mt-16">
+		<footer
+			className={`mt-16 border-t border-white/10 ${
+				isAdminPage
+					? 'bg-slate-950 bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.1),_transparent_24%),radial-gradient(circle_at_top_right,_rgba(168,85,247,0.1),_transparent_28%)]'
+					: 'bg-slate-900/50'
+			}`}>
 			<div className="max-w-7xl mx-auto px-6 py-12">
 				<div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
 					{/* Brand */}

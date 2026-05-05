@@ -4,16 +4,16 @@ import toast from 'react-hot-toast';
 import { UserContext } from './UserContext';
 import ConfirmationDialog from './components/ConfirmationDialog';
 import {
-	FaBars,
-	FaPlus,
-	FaSearch,
-	FaSignInAlt,
-	FaSignOutAlt,
-	FaTachometerAlt,
-	FaTimes,
-	FaUserCircle,
-	FaUserPlus,
-} from 'react-icons/fa';
+	CircleUserRound,
+	LayoutDashboard,
+	LogIn,
+	LogOut,
+	Menu,
+	Plus,
+	Search,
+	UserPlus,
+	X,
+} from 'lucide-react';
 import blogLogo from './assets/Logo/new-gen-logo-cropped.png';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
@@ -84,15 +84,15 @@ const Header = () => {
 
 			<div className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#0f172a]/95 backdrop-blur-md">
 				<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-					<div className="py-3">
-						<div className="flex items-center justify-between">
+					<div className="py-3 sm:py-3.5">
+						<div className="flex min-h-[52px] items-center justify-between">
 							<Link
 								to="/"
-								className="whitespace-nowrap bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-xl font-black text-transparent sm:text-2xl"
+								className="flex flex-shrink-0 items-center whitespace-nowrap"
 								onClick={() => setMobileMenuOpen(false)}>
 								<img
 									src={blogLogo}
-									className="h-10 w-auto object-contain"
+									className="h-11 w-auto object-contain sm:h-12"
 									alt="Logo"
 								/>
 							</Link>
@@ -103,10 +103,10 @@ const Header = () => {
 										type="text"
 										placeholder="Search stories..."
 										value={searchQuery}
-										onChange={handleInstantSearch}
-										className="w-full rounded-xl border border-white/10 bg-white/10 py-2 px-4 pl-10 text-sm text-white placeholder-slate-500 outline-none focus:bg-white/20"
-									/>
-									<FaSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+									onChange={handleInstantSearch}
+									className="w-full rounded-xl border border-white/10 bg-white/10 py-2 px-4 pl-10 text-sm text-white placeholder-slate-500 outline-none focus:bg-white/20"
+								/>
+									<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
 								</div>
 							</div>
 
@@ -114,7 +114,7 @@ const Header = () => {
 								{username ? (
 									<>
 										<div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
-											<FaUserCircle className="h-4 w-4 text-cyan-400" />
+											<CircleUserRound className="h-4 w-4 text-cyan-400" />
 											<span className="text-sm text-white/90">{username}</span>
 											{userInfo.role !== 'reader' && (
 												<span className="text-xs text-blue-300">
@@ -126,13 +126,13 @@ const Header = () => {
 											<Link
 												to="/create"
 												className="text-sm text-slate-300 hover:text-cyan-400">
-												<FaPlus className="mr-1 inline" /> Create
+												<Plus className="mr-1 inline h-4 w-4" /> Create
 											</Link>
 										)}
 										<button
 											onClick={() => setShowLogoutConfirm(true)}
 											className="text-sm text-red-600 hover:text-red-400">
-											<FaSignOutAlt className="mr-1 inline" /> Logout
+											<LogOut className="mr-1 inline h-4 w-4" /> Logout
 										</button>
 									</>
 								) : (
@@ -140,12 +140,12 @@ const Header = () => {
 										<Link
 											to="/login"
 											className="text-sm text-slate-300 hover:text-cyan-400">
-											<FaSignInAlt className="mr-1 inline" /> Login
+											<LogIn className="mr-1 inline h-4 w-4" /> Login
 										</Link>
 										<Link
 											to="/register"
 											className="text-sm text-slate-300 hover:text-cyan-400">
-											<FaUserPlus className="mr-1 inline" /> Register
+											<UserPlus className="mr-1 inline h-4 w-4" /> Register
 										</Link>
 									</>
 								)}
@@ -153,7 +153,7 @@ const Header = () => {
 									<Link
 										to="/admin"
 										className="text-sm font-bold text-green-800 hover:text-cyan-400">
-										<FaTachometerAlt className="mr-1 inline" fill="green" />
+										<LayoutDashboard className="mr-1 inline h-4 w-4 text-green-600" />
 										Dashboard
 									</Link>
 								)}
@@ -163,12 +163,12 @@ const Header = () => {
 								<button
 									onClick={() => setSearchOpen(!searchOpen)}
 									className="p-2 text-slate-300">
-									<FaSearch size={18} />
+									<Search size={18} />
 								</button>
 								<button
 									onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
 									className="rounded-lg bg-white/10 p-2 text-white">
-									{mobileMenuOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
+									{mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
 								</button>
 							</div>
 						</div>
@@ -193,7 +193,7 @@ const Header = () => {
 								{username ? (
 									<>
 										<div className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2">
-											<FaUserCircle className="h-5 w-5 text-cyan-400" />
+											<CircleUserRound className="h-5 w-5 text-cyan-400" />
 											<span className="text-sm text-white/90">{username}</span>
 											{userInfo.role !== 'reader' && (
 												<span className="ml-auto text-xs text-blue-300">
@@ -206,7 +206,7 @@ const Header = () => {
 												to="/create"
 												onClick={() => setMobileMenuOpen(false)}
 												className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-cyan-400">
-												<FaPlus className="mr-2 inline" /> Create New Post
+												<Plus className="mr-2 inline h-4 w-4" /> Create New Post
 											</Link>
 										)}
 										{userInfo?.role === 'admin' && (
@@ -214,13 +214,13 @@ const Header = () => {
 												to="/admin"
 												onClick={() => setMobileMenuOpen(false)}
 												className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-cyan-400">
-												<FaTachometerAlt className="mr-2 inline" /> Dashboard
+												<LayoutDashboard className="mr-2 inline h-4 w-4" /> Dashboard
 											</Link>
 										)}
 										<button
 											onClick={() => setShowLogoutConfirm(true)}
 											className="rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-white/5 hover:text-red-400">
-											<FaSignOutAlt className="mr-2 inline" /> Logout
+											<LogOut className="mr-2 inline h-4 w-4" /> Logout
 										</button>
 									</>
 								) : (
@@ -229,13 +229,13 @@ const Header = () => {
 											to="/login"
 											onClick={() => setMobileMenuOpen(false)}
 											className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-cyan-400">
-											<FaSignInAlt className="mr-2 inline" /> Login
+											<LogIn className="mr-2 inline h-4 w-4" /> Login
 										</Link>
 										<Link
 											to="/register"
 											onClick={() => setMobileMenuOpen(false)}
 											className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-cyan-400">
-											<FaUserPlus className="mr-2 inline" /> Register
+											<UserPlus className="mr-2 inline h-4 w-4" /> Register
 										</Link>
 									</>
 								)}
@@ -245,7 +245,7 @@ const Header = () => {
 				</div>
 			</div>
 
-			<div className="h-[60px] md:h-[70px]" />
+			<div className="h-[72px] md:h-[76px]" />
 		</>
 	);
 };

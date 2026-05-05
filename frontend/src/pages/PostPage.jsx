@@ -2,16 +2,14 @@ import { useContext, useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { formatISO9075 } from 'date-fns';
 import {
-	FaChevronLeft,
-	FaEdit,
-	FaHeart,
-	FaLink,
-	FaRegComments,
-	FaShareAlt,
-	FaTrashAlt,
-	FaTwitter,
-	FaWhatsapp,
-} from 'react-icons/fa';
+	ChevronLeft,
+	Heart,
+	Link2,
+	MessageCircle,
+	PenSquare,
+	Share2,
+	Trash2,
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import DOMPurify from 'dompurify';
 import { UserContext } from '../UserContext';
@@ -415,7 +413,7 @@ const PostPage = () => {
 			<Link
 				to="/"
 				className="mb-8 flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-cyan-400">
-				<FaChevronLeft size={12} /> Back to stories
+				<ChevronLeft size={12} /> Back to stories
 			</Link>
 
 			<header className="mb-10">
@@ -446,7 +444,7 @@ const PostPage = () => {
 							<Link
 								to={`/edit/${postInfo._id}`}
 								className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-2.5 text-white shadow-lg transition-all hover:border-cyan-400 hover:bg-cyan-500">
-								<FaEdit size={16} />
+								<PenSquare size={16} />
 								<span className="text-sm font-semibold">Edit Story</span>
 							</Link>
 						)}
@@ -455,7 +453,7 @@ const PostPage = () => {
 							<button
 								onClick={() => setShowModal(true)}
 								className="flex items-center gap-2 py-2 text-red-500 transition-colors hover:text-red-400">
-								<FaTrashAlt size={14} />
+								<Trash2 size={14} />
 								<span className="text-sm font-semibold tracking-wider">
 									Delete Story
 								</span>
@@ -491,14 +489,14 @@ const PostPage = () => {
 							type="button"
 							onClick={handleShare}
 							className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-cyan-400/40 hover:bg-white/10">
-							<FaShareAlt />
+							<Share2 size={16} />
 							Share
 						</button>
 						<button
 							type="button"
 							onClick={copyLink}
 							className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-cyan-400/40 hover:bg-white/10">
-							<FaLink />
+							<Link2 size={16} />
 							Copy Link
 						</button>
 						<a
@@ -506,7 +504,7 @@ const PostPage = () => {
 							target="_blank"
 							rel="noreferrer"
 							className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-cyan-400/40 hover:bg-white/10">
-							<FaTwitter />
+							<Share2 size={16} />
 							X
 						</a>
 						<a
@@ -514,7 +512,7 @@ const PostPage = () => {
 							target="_blank"
 							rel="noreferrer"
 							className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-cyan-400/40 hover:bg-white/10">
-							<FaWhatsapp />
+							<MessageCircle size={16} />
 							WhatsApp
 						</a>
 					</div>
@@ -619,7 +617,7 @@ const PostPage = () => {
 							Discussion
 						</p>
 						<h2 className="mt-2 flex items-center gap-3 text-2xl font-bold text-white">
-							<FaRegComments className="text-cyan-400" />
+							<MessageCircle className="text-cyan-400" />
 							Comments
 						</h2>
 					</div>
@@ -713,12 +711,12 @@ const PostPage = () => {
 												type="button"
 												onClick={() => toggleCommentLike(comment._id)}
 												disabled={likingCommentId === comment._id}
-												className={`inline-flex items-center gap-2 text-sm font-semibold transition ${
-													hasLikedComment
-														? 'text-rose-400'
-														: 'text-slate-400 hover:text-rose-400'
-												}`}>
-												<FaHeart />
+											className={`inline-flex items-center gap-2 text-sm font-semibold transition ${
+												hasLikedComment
+													? 'text-rose-400'
+													: 'text-slate-400 hover:text-rose-400'
+											}`}>
+												<Heart size={16} />
 												{comment.likedBy?.length || 0}
 											</button>
 											{userInfo && (
@@ -822,7 +820,7 @@ const PostPage = () => {
 																			? 'text-rose-400'
 																			: 'text-slate-400 hover:text-rose-400'
 																	}`}>
-																	<FaHeart />
+																	<Heart size={16} />
 																	{reply.likedBy?.length || 0}
 																</button>
 															</div>

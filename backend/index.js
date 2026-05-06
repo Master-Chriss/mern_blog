@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit'; // To handle async errors without try-catch in every controller
 import cookieParser from 'cookie-parser';
 import connectToDB from './db/connectDB.js';
 
@@ -13,6 +14,14 @@ import commentRoutes from './routes/commentRoute.js';
 const app = express();
 const port = process.env.PORT;
 const DB_URL = process.env.DB_URL;
+
+// Rate limiting
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 100, // limit each IP to 100 requests per windowMs
+});
+
+app.use(limiter);
 
 // Middleware
 app.use(

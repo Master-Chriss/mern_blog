@@ -3,6 +3,11 @@ import jwt from 'jsonwebtoken';
 
 const secret = process.env.JWT_SECRET;
 
+export const requireAdmin = (req, res, next) => {
+	if (req.user?.role !== 'admin') return res.status(403).json('Access denied');
+	next();
+};
+
 export const verifyToken = (req, res, next) => {
 	const { token } = req.cookies;
 	if (!token) return res.status(401).json({ message: 'Not logged in' });

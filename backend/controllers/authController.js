@@ -2,7 +2,7 @@ import { User } from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const salt = bcrypt.genSaltSync(10);
+const salt = await bcrypt.genSaltSync(10);
 const secret = process.env.JWT_SECRET;
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -44,7 +44,8 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
 	const { username, password } = req.body;
-	const user = await User.findOne({ username });
+	try {
+		const user = await User.findOne({ username });
 
 	if (!user || !bcrypt.compareSync(password, user.password)) {
 		return res.status(400).json('Wrong credentials');
@@ -55,7 +56,7 @@ export const login = async (req, res) => {
 		secret,
 		{},
 		(err, token) => {
-				if (err) throw err;
+				if (err) return res.status(500).json({ message: 'Error generating token', error: err.message });
 				res
 					.cookie('token', token, getTokenCookieOptions())
 					.json({
@@ -65,6 +66,11 @@ export const login = async (req, res) => {
 				});
 		},
 	);
+	} catch (error) {
+		console.log("Error in login controller.", error.message)
+		return res.status(500).json({message: 'Server error', error: error.message});
+	}
+	
 };
 
 export const fetchProfile = (req, res) => {
@@ -72,7 +78,7 @@ export const fetchProfile = (req, res) => {
 	if (!token) return res.json(null);
 
 	jwt.verify(token, secret, {}, (err, info) => {
-		if (err) throw err;
+		if (err) return res.status(401).json('Unauthorized');
 		res.json({
 			id: info.id,
 			username: info.username,
@@ -82,7 +88,13 @@ export const fetchProfile = (req, res) => {
 };
 
 export const logout = (req, res) => {
-	res.clearCookie('token', getTokenCookieOptions()).json('ok');
+	try {
+		res.clearCookie('token', getTokenCookieOptions()).json('ok');
+		
+	} catch (error) {
+		console.log("Error in logout controller")
+		return res.status(500).json({message: 'Server error', error: error.message});
+	}
 };
 
 // TODO: Admin Dashboard Controllers
@@ -94,9 +106,14 @@ export const getAllUsers = async (req, res) => {
   jwt.verify(token, secret, {}, async (err, info) => {
     if (err) return res.status(401).json('Unauthorized');
     if (info.role !== 'admin') return res.status(403).json('Access denied');
-    
-    const users = await User.find().select('-password');
-    res.json(users);
+
+    try {
+      const users = await User.find().select('-password');
+      res.json(users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ message: 'Server error', error: error.message });
+    }
   });
 };
 
@@ -109,9 +126,14 @@ export const updateUserRole = async (req, res) => {
   jwt.verify(token, secret, {}, async (err, info) => {
     if (err) return res.status(401).json('Unauthorized');
     if (info.role !== 'admin') return res.status(403).json('Access denied');
-    
-    await User.findByIdAndUpdate(id, { role });
-    res.json('Role updated');
+
+    try {
+      await User.findByIdAndUpdate(id, { role });
+      res.json('Role updated');
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      res.status(500).json({ message: 'Server error', error: error.message });
+    }
   });
 };
 
@@ -123,9 +145,14 @@ export const deleteUser = async (req, res) => {
   jwt.verify(token, secret, {}, async (err, info) => {
     if (err) return res.status(401).json('Unauthorized');
     if (info.role !== 'admin') return res.status(403).json('Access denied');
-    
-    await User.findByIdAndDelete(id);
-    res.json('User deleted');
+
+    try {
+      await User.findByIdAndDelete(id);
+      res.json('User deleted');
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: 'Server error', error: error.message });
+    }
   });
 };
 

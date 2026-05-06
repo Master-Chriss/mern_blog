@@ -99,17 +99,44 @@ export const createPost = async (req, res) => {
 };
 
 export const getPosts = async (req, res) => {
-	const posts = await Post.find()
-		.populate('author', ['username'])
-		.sort({ createdAt: -1 })
-		.limit(12);
-	res.json(posts);
+	try {
+		const posts = await Post.find()
+			.populate('author', ['username'])
+			.sort({ createdAt: -1 })
+			.limit(12);
+		res.json(posts);
+	} catch (error) {
+		console.error('Error fetching posts:', error);
+		res.status(500).json({ message: 'Server error' });
+	}
+};
+
+export const getMyPosts = async (req, res) => {
+	try {
+		const posts = await Post.find({ author: req.user.id })
+			.populate('author', ['username'])
+			.sort({ createdAt: -1 });
+		res.json(posts);
+	} catch (error) {
+		console.error('Error fetching author posts:', error);
+		res.status(500).json({ message: 'Server error' });
+	}
 };
 
 export const getSinglePost = async (req, res) => {
-	const { id } = req.params;
-	const postDoc = await Post.findById(id).populate('author', ['username']);
-	res.json(postDoc);
+	try {
+		const { id } = req.params;
+		const postDoc = await Post.findById(id).populate('author', ['username']);
+
+		if (!postDoc) {
+			return res.status(404).json({ message: 'Post not found' });
+		}
+
+		res.json(postDoc);
+	} catch (error) {
+		console.error('Error fetching single post:', error);
+		res.status(500).json({ message: 'Server error' });
+	}
 };
 
 export const updatePost = async (req, res) => {

@@ -2,6 +2,7 @@ import express from 'express';
 import {
 	createPost,
 	getPosts,
+	getMyPosts,
 	getSinglePost,
 	updatePost,
 	deletePost,
@@ -11,6 +12,7 @@ import {
 	uploadTempImage,
 } from '../controllers/postController.js';
 import upload from '../middlewares/cloudinary.config.js';
+import { verifyToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -22,11 +24,12 @@ router.post('/admin/upload-temp', upload.single('file'), uploadTempImage);
 
 //  PUBLIC ROUTES (less specific)
 router.get('/', getPosts);
-router.get('/:id', getSinglePost); // This comes AFTER admin routes!
 
 //  PROTECTED ROUTES
+router.get('/mine', verifyToken, getMyPosts);
 router.post('/', upload.single('file'), createPost);
 router.put('/:id', upload.single('file'), updatePost);
 router.delete('/:id', deletePost);
+router.get('/:id', getSinglePost); // This comes AFTER specific routes
 
 export default router;

@@ -13,6 +13,7 @@ import CreatePost from './pages/CreatePost';
 import PostPage from './pages/PostPage';
 import EditPage from './pages/EditPage';
 import AdminDashboard from './pages/AdminDashboard';
+import AuthorDashboard from './pages/AuthorDashboard';
 import ArchivePage from './pages/ArchivePage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
@@ -63,6 +64,16 @@ const AppRoutes = () => {
 					<Route path="/post/:id" element={<PostPage />} />
 					<Route path="/:type(category|tag)/:slug" element={<ArchivePage />} />
 					<Route path="/edit/:id" element={<EditPage />} />
+				<Route
+					path="/author"
+					element={
+						userInfo?.role === 'author' ? (
+							<AuthorDashboard />
+						) : (
+							<Navigate to="/" />
+						)
+					}
+				/>
 				<Route
 					path="/admin"
 					element={

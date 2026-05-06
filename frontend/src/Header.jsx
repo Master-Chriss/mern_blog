@@ -62,6 +62,12 @@ const Header = () => {
 	};
 
 	const username = userInfo?.username;
+	const dashboardPath =
+		userInfo?.role === 'admin'
+			? '/admin'
+			: userInfo?.role === 'author'
+				? '/author'
+				: null;
 
 	const handleInstantSearch = (e) => {
 		const value = e.target.value;
@@ -149,9 +155,9 @@ const Header = () => {
 										</Link>
 									</>
 								)}
-								{userInfo?.role === 'admin' && (
+								{dashboardPath && (
 									<Link
-										to="/admin"
+										to={dashboardPath}
 										className="text-sm font-bold text-green-800 hover:text-cyan-400">
 										<LayoutDashboard className="mr-1 inline h-4 w-4 text-green-600" />
 										Dashboard
@@ -209,9 +215,9 @@ const Header = () => {
 												<Plus className="mr-2 inline h-4 w-4" /> Create New Post
 											</Link>
 										)}
-										{userInfo?.role === 'admin' && (
+										{dashboardPath && (
 											<Link
-												to="/admin"
+												to={dashboardPath}
 												onClick={() => setMobileMenuOpen(false)}
 												className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-cyan-400">
 												<LayoutDashboard className="mr-2 inline h-4 w-4" /> Dashboard

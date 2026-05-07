@@ -1,4 +1,5 @@
 import express from 'express';
+import multer from 'multer';
 import {
 	createPost,
 	getPosts,
@@ -16,20 +17,23 @@ import { verifyToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
+// 
+const memoryUpload = multer({ storage: multer.memoryStorage() , limits: { fileSize: 5 * 1024 * 1024 } });
+
 // ADMIN ROUTES FIRST (more specific)
 router.get('/admin/cleanup/preview', previewOrphanedImages);
 router.post('/admin/cleanup/execute', cleanupOrphanedImages);
 router.delete('/admin/image', deleteSpecificImage);
 router.post('/admin/upload-temp', upload.single('file'), uploadTempImage);
 
-//  PUBLIC ROUTES (less specific)
+// PUBLIC ROUTES
 router.get('/', getPosts);
 
-//  PROTECTED ROUTES
+// PROTECTED ROUTES
 router.get('/mine', verifyToken, getMyPosts);
 router.post('/', upload.single('file'), createPost);
-router.put('/:id', upload.single('file'), updatePost);
+router.put('/:id', memoryUpload.single('file'), updatePost);
 router.delete('/:id', deletePost);
-router.get('/:id', getSinglePost); // This comes AFTER specific routes
+router.get('/:id', getSinglePost);
 
 export default router;

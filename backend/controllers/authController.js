@@ -17,18 +17,18 @@ export const register = async (req, res) => {
 	try {
 		// validation
 		if (!username || !email || !password) {
-			return res.status(400).json('All fields are required');
+			return res.status(400).json({ message: 'All fields are required' });
 		}
 
 		// Check if user exists
 		const emailExists = await User.findOne({ email });
 		if (emailExists) {
-			return res.status(400).json('Email already registered');
+			return res.status(400).json({ message: 'Email already registered' });
 		}
 
 		const usernameExists = await User.findOne({ username });
 		if (usernameExists) {
-			return res.status(400).json('Username already taken');
+			return res.status(400).json({ message: 'Username already taken' });
 		}
 
 		const hashedPassword = await bcrypt.hash(password, salt);
@@ -54,13 +54,13 @@ export const login = async (req, res) => {
 	const { username, password } = req.body;
 	try {
 		if(!username || !password) {
-			return res.status(400).json('All fields are required');
+			return res.status(400).json({ message: 'All fields are required' });
 		}
 
 		const user = await User.findOne({ username });
 
 	if (!user || !bcrypt.compareSync(password, user.password)) {
-		return res.status(400).json('Wrong credentials');
+		return res.status(400).json({ message: 'Wrong credentials' });
 	}
 
 	jwt.sign(
@@ -161,6 +161,6 @@ export const getStats = async (req, res) => {
     ]);
     res.json({ totalUsers, totalAuthors, totalReaders, totalAdmins });
   } catch (error) {
-    res.status(500).json('Error fetching stats');
+    res.status(500).json({message: 'Error fetching stats'});
   }
 };

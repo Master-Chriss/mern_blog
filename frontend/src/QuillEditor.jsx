@@ -1,4 +1,9 @@
 import { useEffect, useRef } from 'react';
+
+const API_BASE_URL = (
+	import.meta.env.VITE_API_URL || 'http://localhost:4000'
+).replace(/\/$/, '');
+
 const QuillEditor = ({ value, onChange }) => {
 	const editorRef = useRef(null);
 	const quillRef = useRef(null);
@@ -17,9 +22,9 @@ const QuillEditor = ({ value, onChange }) => {
 			formData.append('file', file);
 
 			try {
-				// Upload to backend's multer+cloudinary middleware
+				// Upload through the post router so the backend can store the image in Cloudinary.
 				const response = await fetch(
-					`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/admin/upload-temp`,
+					`${API_BASE_URL}/post/admin/upload-temp`,
 					{
 						method: 'POST',
 						body: formData,
@@ -27,27 +32,25 @@ const QuillEditor = ({ value, onChange }) => {
 					},
 				);
 
-				if (response.ok) {
-					const data = await response.json();
-					const imageUrl = data.secure_url || data.url;
+				const data = await response.json().catch(() => ({}));
 
-					// Insert the image URL into Quill (not base64)
-					const range = quillRef.current.getSelection();
-					if (range) {
-						quillRef.current.insertEmbed(
-							range.index,
-							'image',
-							imageUrl,
-							'user',
-						);
-						quillRef.current.setSelection(range.index + 1);
-					}
-				} else {
-					alert('Image upload failed');
+				if (!response.ok) {
+					throw new Error(data.message || 'Image upload failed');
 				}
+
+				const imageUrl = data.secure_url || data.url;
+				if (!imageUrl) {
+					throw new Error('Uploaded image URL missing');
+				}
+
+				// Insert the hosted image URL into Quill instead of a base64 string.
+				const range = quillRef.current.getSelection(true);
+				const insertAt = range?.index ?? quillRef.current.getLength();
+				quillRef.current.insertEmbed(insertAt, 'image', imageUrl, 'user');
+				quillRef.current.setSelection(insertAt + 1);
 			} catch (error) {
 				console.error('Image upload error:', error);
-				alert('Error uploading image');
+				alert(error.message || 'Error uploading image');
 			}
 		};
 	};

@@ -168,13 +168,24 @@ export const updatePost = async (req, res) => {
 					summary,
 					content,
 					category: normalizePostCategory(category),
-					tags: normalizePostTags(tags),
+					...(tags !== undefined && { tags: normalizePostTags(tags) }),
 				};
 
 			// If new image uploaded, handle old image deletion and new image URL
 			if (req.file) {
-				const newImageUrl =
-					req.file?.secure_url || req.file?.url || req.file?.path;
+				// Upload to Cloudinary from memory buffer
+				const uploadResult = await new Promise((resolve, reject) => {
+					const uploadStream = cloudinary.v2.uploader.upload_stream(
+						{ folder: 'blog-images', transformation: [{ width: 1000, crop: 'limit' }] },
+						(error, result) => {
+							if (error) reject(error);
+							else resolve(result);
+						}
+					);
+					uploadStream.end(req.file.buffer);
+				});
+
+				const newImageUrl = uploadResult.secure_url;
 
 				if (!newImageUrl) {
 					return res
@@ -186,10 +197,7 @@ export const updatePost = async (req, res) => {
 				if (postDoc.cover && postDoc.cover.includes('cloudinary')) {
 					const oldPublicId = extractPublicIdFromUrl(postDoc.cover);
 					if (oldPublicId) {
-						await cloudinary.v2.uploader.destroy(oldPublicId, (err, result) => {
-							if (err) console.error('Error deleting old image:', err);
-							else console.log('Old image deleted from Cloudinary:', result);
-						});
+						await cloudinary.v2.uploader.destroy(oldPublicId);
 					}
 				}
 

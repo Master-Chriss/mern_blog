@@ -35,7 +35,7 @@ const postSchema = new mongoose.Schema(
 				default: [],
 				validate: {
 					validator: (tags) => tags.length <= 8,
-					message: 'A post can have at most 8 tags',
+					message: 'A post cannot have more than 8 tags',
 				},
 			},
 			cover: {
@@ -49,4 +49,6 @@ const postSchema = new mongoose.Schema(
 	},
 );
 
+// Creating post indexes for efficient searching by title, summary, and content
+postSchema.index({ title: 'text', summary: 'text', content: 'text', createdAt: -1 });
 export const Post = mongoose.model('Post', postSchema);

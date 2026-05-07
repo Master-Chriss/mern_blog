@@ -11,4 +11,5 @@ const userSchema = new mongoose.Schema({
 	},
 }, { timestamps: true });
 
+userSchema.index({ username: 'text', email: 'text', unique: true }); // Index for efficient search by username or email
 export const User = mongoose.model('User', userSchema);

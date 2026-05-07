@@ -12,6 +12,12 @@ import {
 import { parseTagInput, tagsToInputValue } from '../utils/postTags';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const resolveCoverUrl = (cover) =>
+	cover
+		? cover.startsWith('http')
+			? cover
+			: `${API_URL}/${cover.replace(/\\/g, '/')}`
+		: '';
 
 const EditPage = () => {
 	const { id } = useParams();
@@ -22,6 +28,7 @@ const EditPage = () => {
 	const [category, setCategory] = useState(DEFAULT_POST_CATEGORY);
 	const [tagInput, setTagInput] = useState('');
 	const [files, setFiles] = useState('');
+	const [coverUrl, setCoverUrl] = useState('');
 	const [redirect, setRedirect] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [isUpdating, setIsUpdating] = useState(false);
@@ -59,7 +66,7 @@ const EditPage = () => {
 
 				// Check permissions
 				const userIsAdmin = userInfo?.role === 'admin';
-				const userIsAuthor = userInfo?.id === postInfo.author._id;
+				const userIsAuthor = String(userInfo?.id) === String(postInfo.author._id);
 
 				if (!userIsAdmin && !userIsAuthor) {
 					setUnauthorizedError('You are not authorized to edit this post');
@@ -67,13 +74,14 @@ const EditPage = () => {
 					return;
 				}
 
-					setTitle(postInfo.title);
-					setSummary(postInfo.summary);
-					setContent(postInfo.content);
-					setCategory(postInfo.category || DEFAULT_POST_CATEGORY);
-					setTagInput(tagsToInputValue(postInfo.tags));
-					setError(null);
-					setUnauthorizedError(null);
+				setTitle(postInfo.title);
+				setSummary(postInfo.summary);
+				setContent(postInfo.content);
+				setCategory(postInfo.category || DEFAULT_POST_CATEGORY);
+				setTagInput(tagsToInputValue(postInfo.tags || []));
+				setCoverUrl(resolveCoverUrl(postInfo.cover));
+				setError(null);
+				setUnauthorizedError(null);
 				setLoading(false);
 			})
 			.catch((err) => {
@@ -83,19 +91,30 @@ const EditPage = () => {
 			});
 	}, [id, userInfo, ready]);
 
+	useEffect(() => {
+		if (!files?.[0]) return undefined;
+
+		const previewUrl = URL.createObjectURL(files[0]);
+		setCoverUrl(previewUrl);
+
+		return () => {
+			URL.revokeObjectURL(previewUrl);
+		};
+	}, [files]);
+
 	async function updatePost(ev) {
 		ev.preventDefault();
 		if (isUpdating) return; // Prevent double clicks
 
-			const data = new FormData();
-			const parsedTags = parseTagInput(tagInput);
-			data.set('title', title);
-			data.set('summary', summary);
-			data.set('content', content);
-			data.set('category', category);
-			data.set('tags', parsedTags.join(','));
-			data.set('id', id);
-			if (files?.[0]) data.set('file', files?.[0]);
+		const data = new FormData();
+		const parsedTags = parseTagInput(tagInput);
+		data.set('title', title);
+		data.set('summary', summary);
+		data.set('content', content);
+		data.set('category', category);
+		data.set('tags', parsedTags.join(','));
+		data.set('id', id);
+		if (files?.[0]) data.set('file', files?.[0]);
 
 		setIsUpdating(true);
 
@@ -171,7 +190,7 @@ const EditPage = () => {
 		);
 
 	return (
-		<div className="min-h-screen bg-[#0d0e2b] p-6 md:p-12">
+		<div className="min-h-screen bg-[#0d0e2b] p-6 md:p-10 lg:p-12">
 			<form onSubmit={updatePost} className="max-w-6xl mx-auto space-y-8">
 				{/* Large Header Title Input */}
 				<input
@@ -182,15 +201,16 @@ const EditPage = () => {
 					className="w-full bg-transparent text-5xl md:text-7xl font-black text-white placeholder:text-white/30 outline-none border-none mb-4 focus:text-white transition-all"
 				/>
 
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-						{/* Summary Box */}
-						<div className="md:col-span-2 space-y-4">
-							<textarea
-								value={summary}
-								onChange={(ev) => setSummary(ev.target.value)}
+				<div className="grid grid-cols-1 items-stretch gap-6 md:min-h-[27rem] md:grid-cols-3">
+					<div className="space-y-6 md:col-span-2 md:grid md:h-full md:grid-rows-[minmax(180px,1fr)_auto] md:space-y-0">
+						<textarea
+							value={summary}
+							onChange={(ev) => setSummary(ev.target.value)}
 							placeholder="What's this story about?"
-								className="w-full h-full min-h-[160px] bg-[#1a1b4b]/40 border border-white/5 rounded-[2rem] p-6 text-gray-300 placeholder:text-gray-600 focus:outline-none focus:bg-[#1a1b4b]/60 transition-all resize-none text-lg"
-							/>
+							className="w-full min-h-[150px] rounded-[2rem] border border-white/10 bg-[#1a1b4b]/40 p-6 text-lg text-gray-300 placeholder:text-gray-600 outline-none transition focus:bg-[#1a1b4b]/60 resize-none md:h-full"
+						/>
+
+						<div className="grid grid-cols-1 gap-4 md:mt-6 md:grid-cols-2">
 							<div className="rounded-[2rem] border border-white/10 bg-[#1a1b4b]/30 p-5">
 								<label className="mb-2 block text-xs uppercase tracking-[0.25em] text-slate-500">
 									Category
@@ -206,43 +226,66 @@ const EditPage = () => {
 											</option>
 										),
 									)}
-									</select>
-								</div>
-								<div className="rounded-[2rem] border border-white/10 bg-[#1a1b4b]/30 p-5">
-									<label className="mb-2 block text-xs uppercase tracking-[0.25em] text-slate-500">
-										Tags
-									</label>
-									<input
-										type="text"
-										value={tagInput}
-										onChange={(ev) => setTagInput(ev.target.value)}
-										placeholder="React, Node.js, Premier League"
-										className="w-full rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400"
-									/>
-									<p className="mt-2 text-xs text-slate-500">
-										Use commas between tags. Up to 8 tags.
-									</p>
-								</div>
+								</select>
 							</div>
 
-					{/* Upload Box */}
-					<label className="border-2 border-dashed border-white/10 rounded-[2rem] flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white/5 transition-all text-gray-500 bg-[#1a1b4b]/20 group">
-						<div className="text-4xl font-light group-hover:scale-110 transition-transform">
-							+
+							<div className="rounded-[2rem] border border-white/10 bg-[#1a1b4b]/30 p-5">
+								<label className="mb-2 block text-xs uppercase tracking-[0.25em] text-slate-500">
+									Tags
+								</label>
+								<input
+									type="text"
+									value={tagInput}
+									onChange={(ev) => setTagInput(ev.target.value)}
+									placeholder="React, Node.js, Premier League"
+									className="w-full rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400"
+								/>
+								<p className="mt-2 text-xs text-slate-500">
+									Use commas between tags. Up to 8 tags.
+								</p>
+							</div>
 						</div>
-						<span className="text-[10px] uppercase tracking-[0.2em] font-bold">
-							Upload Cover
-						</span>
+					</div>
+
+					<label className="group flex min-h-[220px] flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#1a1b4b]/20 transition-all hover:bg-white/5 md:h-full md:min-h-0">
+						<div className="relative flex-1 overflow-hidden border-b border-white/10 bg-slate-950/40">
+							{coverUrl ? (
+								<img
+									src={coverUrl}
+									alt="Current cover preview"
+									className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+								/>
+							) : (
+								<div className="flex h-full items-center justify-center text-sm text-slate-500">
+									No cover preview
+								</div>
+							)}
+							<div className="absolute inset-0 bg-gradient-to-t from-[#0d0e2b]/70 to-transparent" />
+						</div>
+						<div className="flex flex-col items-center justify-center gap-3 p-5 text-gray-500">
+							<div className="text-4xl font-light transition-transform group-hover:scale-110">
+								+
+							</div>
+							<span className="text-[10px] font-bold uppercase tracking-[0.2em]">
+								Replace Cover
+							</span>
+							<p className="max-w-[12rem] text-center text-xs text-slate-400">
+								{files?.[0]
+									? files[0].name
+									: 'Choose a new image to replace the current cover'}
+							</p>
+						</div>
 						<input
 							type="file"
 							className="hidden"
+							accept="image/*"
 							onChange={(ev) => setFiles(ev.target.files)}
 						/>
 					</label>
 				</div>
 
 				{/* Editor Container */}
-				<div className="bg-[#1a1b4b]/40 border border-white/5 rounded-[2.5rem] overflow-hidden backdrop-blur-sm">
+				<div className="overflow-hidden rounded-[2.5rem] border border-white/10 bg-[#1a1b4b]/40 shadow-2xl shadow-black/10 backdrop-blur-sm">
 					<QuillEditor
 						theme="snow"
 						value={content}

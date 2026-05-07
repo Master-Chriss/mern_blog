@@ -1,5 +1,8 @@
-export const tagsToInputValue = (tags) =>
-	Array.isArray(tags) ? tags.join(', ') : '';
+export const tagsToInputValue = (tags) => {
+	if (Array.isArray(tags)) return tags.join(', ');
+	if (typeof tags === 'string') return tags;
+	return '';
+};
 
 export const parseTagInput = (value) => {
 	if (!value) return [];

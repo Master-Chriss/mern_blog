@@ -38,4 +38,6 @@ const commentSchema = new Schema(
 	},
 );
 
+commentSchema.index({ post: 1, createdAt: -1 }); // Index for efficient retrieval of comments by post and creation time
+
 export const Comment = mongoose.model('Comment', commentSchema);

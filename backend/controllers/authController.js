@@ -52,11 +52,29 @@ export const register = async (req, res) => {
 			password: hashedPassword,
 			role: 'reader',
 		});
-		res.status(201).json({
-			id: newUser._id,
-			username: newUser.username,
-			role: newUser.role,
-		});
+
+		jwt.sign(
+			{ username: newUser.username, id: newUser._id, role: newUser.role },
+			secret,
+			{},
+			(err, token) => {
+				if (err) {
+					return res.status(500).json({
+						message: 'Error generating token',
+						error: err.message,
+					});
+				}
+
+				return res
+					.cookie('token', token, getTokenCookieOptions())
+					.status(201)
+					.json({
+						id: newUser._id,
+						username: newUser.username,
+						role: newUser.role,
+					});
+			},
+		);
 	} catch (err) {
 		console.log("Error in register controller.", err.message)
 		res.status(400).json({message: "Internal server error", error: err.message});
@@ -73,8 +91,12 @@ export const login = async (req, res) => {
 			return res.status(400).json({ message: 'All fields are required' });
 		}
 
+		const normalizedIdentifier = normalizedUsername;
 		const user = await User.findOne({
-			username: new RegExp(`^${escapeRegex(normalizedUsername)}$`, 'i'),
+			$or: [
+				{ username: new RegExp(`^${escapeRegex(normalizedIdentifier)}$`, 'i') },
+				{ email: new RegExp(`^${escapeRegex(normalizedIdentifier)}$`, 'i') },
+			],
 		});
 
 	if (!user || !bcrypt.compareSync(normalizedPassword, user.password)) {

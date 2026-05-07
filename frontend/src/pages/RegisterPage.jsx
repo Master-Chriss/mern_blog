@@ -20,13 +20,21 @@ export default function RegisterPage() {
 			return;
 		}
 
-		setIsLoading(true);
-		try {
-			const response = await fetch(`${API_URL}/auth/register`, {
-				method: 'POST',
-				body: JSON.stringify({ username, password, email }),
-				headers: { 'Content-Type': 'application/json' },
-			});
+			setIsLoading(true);
+			try {
+				const cleanUsername = username.trim().toLowerCase();
+				const cleanEmail = email.trim().toLowerCase();
+				const cleanPassword = password.trim();
+
+				const response = await fetch(`${API_URL}/auth/register`, {
+					method: 'POST',
+					body: JSON.stringify({
+						username: cleanUsername,
+						password: cleanPassword,
+						email: cleanEmail,
+					}),
+					headers: { 'Content-Type': 'application/json' },
+				});
 			if (response.ok) {
 				toast.success('Account created successfully! 🎉');
 				setTimeout(() => setRedirect(true), 1000);

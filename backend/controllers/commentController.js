@@ -24,6 +24,88 @@ export const getCommentsByPost = async (req, res) => {
 	}
 };
 
+export const getAuthorInbox = async (req, res) => {
+	try {
+		if (req.user.role !== 'author' && req.user.role !== 'admin') {
+			return res.status(403).json({ message: 'Not authorized to view author inbox' });
+		}
+
+		const authoredPosts = await Post.find({ author: req.user.id }, '_id title');
+		const postIds = authoredPosts.map((post) => post._id);
+		const postMap = new Map(
+			authoredPosts.map((post) => [post._id.toString(), post.title]),
+		);
+
+		if (postIds.length === 0) {
+			return res.json({
+				activities: [],
+				summary: {
+					totalReaderMessages: 0,
+					recentReaderMessages: 0,
+					activePosts: 0,
+					uniqueReaders: 0,
+				},
+			});
+		}
+
+		const comments = await populateCommentAuthor(
+			Comment.find({
+				post: { $in: postIds },
+				author: { $ne: req.user.id },
+			})
+				.populate('post', ['title'])
+				.sort({ createdAt: -1 })
+				.limit(12),
+		);
+
+		const allReaderComments = await Comment.find({
+			post: { $in: postIds },
+			author: { $ne: req.user.id },
+		}).select('author post createdAt');
+
+		const activities = comments.map((comment) => ({
+			_id: comment._id,
+			type: comment.parentComment ? 'reply' : 'comment',
+			content: comment.content,
+			createdAt: comment.createdAt,
+			post: {
+				_id: comment.post?._id || comment.post,
+				title:
+					comment.post?.title ||
+					postMap.get(comment.post?._id?.toString?.() || comment.post?.toString?.()) ||
+					'Untitled post',
+			},
+			author: comment.author,
+		}));
+
+		const lastSevenDays = new Date();
+		lastSevenDays.setDate(lastSevenDays.getDate() - 7);
+
+		const uniqueReaders = new Set(
+			allReaderComments.map((comment) => comment.author.toString()),
+		).size;
+		const activePosts = new Set(
+			allReaderComments.map((comment) => comment.post.toString()),
+		).size;
+		const recentReaderMessages = allReaderComments.filter(
+			(comment) => new Date(comment.createdAt) >= lastSevenDays,
+		).length;
+
+		res.json({
+			activities,
+			summary: {
+				totalReaderMessages: allReaderComments.length,
+				recentReaderMessages,
+				activePosts,
+				uniqueReaders,
+			},
+		});
+	} catch (error) {
+		console.error('Error fetching author inbox:', error);
+		res.status(500).json({ message: 'Internal Server error' });
+	}
+};
+
 export const createComment = async (req, res) => {
 	const { postId } = req.params;
 	const { content, parentCommentId } = req.body;

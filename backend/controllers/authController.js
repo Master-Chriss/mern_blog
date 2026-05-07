@@ -12,30 +12,43 @@ const getTokenCookieOptions = () => ({
 	secure: isProduction,
 });
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const normalizeUsername = (value = '') => value.trim().toLowerCase();
+const normalizeEmail = (value = '') => value.trim().toLowerCase();
+
 export const register = async (req, res) => {
 	const { username, email, password } = req.body;
 	try {
+		const normalizedUsername = normalizeUsername(username);
+		const normalizedEmail = normalizeEmail(email);
+		const normalizedPassword = password?.trim();
+
 		// validation
-		if (!username || !email || !password) {
+		if (!normalizedUsername || !normalizedEmail || !normalizedPassword) {
 			return res.status(400).json({ message: 'All fields are required' });
 		}
 
 		// Check if user exists
-		const emailExists = await User.findOne({ email });
+		const emailExists = await User.findOne({
+			email: new RegExp(`^${escapeRegex(normalizedEmail)}$`, 'i'),
+		});
 		if (emailExists) {
 			return res.status(400).json({ message: 'Email already registered' });
 		}
 
-		const usernameExists = await User.findOne({ username });
+		const usernameExists = await User.findOne({
+			username: new RegExp(`^${escapeRegex(normalizedUsername)}$`, 'i'),
+		});
 		if (usernameExists) {
 			return res.status(400).json({ message: 'Username already taken' });
 		}
 
-		const hashedPassword = await bcrypt.hash(password, salt);
+		const hashedPassword = await bcrypt.hash(normalizedPassword, salt);
 		
 		const newUser = await User.create({
-			username,
-			email,
+			username: normalizedUsername,
+			email: normalizedEmail,
 			password: hashedPassword,
 			role: 'reader',
 		});
@@ -53,15 +66,20 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
 	const { username, password } = req.body;
 	try {
-		if(!username || !password) {
+		const normalizedUsername = normalizeUsername(username);
+		const normalizedPassword = password?.trim();
+
+		if(!normalizedUsername || !normalizedPassword) {
 			return res.status(400).json({ message: 'All fields are required' });
 		}
 
-		const user = await User.findOne({ username });
+		const user = await User.findOne({
+			username: new RegExp(`^${escapeRegex(normalizedUsername)}$`, 'i'),
+		});
 
-	if (!user || !bcrypt.compareSync(password, user.password)) {
-		return res.status(400).json({ message: 'Wrong credentials' });
-	}
+	if (!user || !bcrypt.compareSync(normalizedPassword, user.password)) {
+			return res.status(400).json({ message: 'Wrong credentials' });
+		}
 
 	jwt.sign(
 		{ username: user.username, id: user._id, role: user.role },

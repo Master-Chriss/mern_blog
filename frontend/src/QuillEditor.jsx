@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 
 const API_BASE_URL = (
 	import.meta.env.VITE_API_URL || 'http://localhost:4000'
 ).replace(/\/$/, '');
+const MAX_EDITOR_IMAGE_SIZE = 5 * 1024 * 1024;
 
 const QuillEditor = ({ value, onChange }) => {
 	const editorRef = useRef(null);
@@ -17,6 +19,16 @@ const QuillEditor = ({ value, onChange }) => {
 		input.onchange = async () => {
 			const file = input.files[0];
 			if (!file) return;
+
+			if (!file.type.startsWith('image/')) {
+				toast.error('Please choose a valid image file.');
+				return;
+			}
+
+			if (file.size > MAX_EDITOR_IMAGE_SIZE) {
+				toast.error('Please choose an image smaller than 5MB.');
+				return;
+			}
 
 			const formData = new FormData();
 			formData.append('file', file);
@@ -48,9 +60,10 @@ const QuillEditor = ({ value, onChange }) => {
 				const insertAt = range?.index ?? quillRef.current.getLength();
 				quillRef.current.insertEmbed(insertAt, 'image', imageUrl, 'user');
 				quillRef.current.setSelection(insertAt + 1);
+				toast.success('Image uploaded successfully');
 			} catch (error) {
 				console.error('Image upload error:', error);
-				alert(error.message || 'Error uploading image');
+				toast.error(error.message || 'Error uploading image');
 			}
 		};
 	};

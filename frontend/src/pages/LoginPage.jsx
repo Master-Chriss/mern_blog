@@ -21,14 +21,20 @@ export default function LoginPage() {
 			return;
 		}
 
-		setIsLoading(true);
-		try {
-			const response = await fetch(`${API_URL}/auth/login`, {
-				method: 'POST',
-				body: JSON.stringify({ username: username.toLowerCase(), password }),
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
-			});
+			setIsLoading(true);
+			try {
+				const cleanUsername = username.trim().toLowerCase();
+				const cleanPassword = password.trim();
+
+				const response = await fetch(`${API_URL}/auth/login`, {
+					method: 'POST',
+					body: JSON.stringify({
+						username: cleanUsername,
+						password: cleanPassword,
+					}),
+					headers: { 'Content-Type': 'application/json' },
+					credentials: 'include',
+				});
 			if (response.ok) {
 				response.json().then((userInfo) => {
 					setUserInfo(userInfo);

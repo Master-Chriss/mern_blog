@@ -41,14 +41,62 @@ const formatMonthLabel = (value) =>
 		month: 'short',
 	}).format(value);
 
+const readJsonResponse = async (response, fallbackMessage) => {
+	const payload = await response.json().catch(() => null);
+
+	if (!response.ok) {
+		throw new Error(payload?.message || fallbackMessage);
+	}
+
+	return payload;
+};
+
+const formatRelativeTime = (value) => {
+	const date = new Date(value);
+	if (Number.isNaN(date.getTime())) return 'Recently';
+
+	const seconds = Math.round((date.getTime() - Date.now()) / 1000);
+	const thresholds = [
+		{ amount: 60, unit: 'second' },
+		{ amount: 60, unit: 'minute' },
+		{ amount: 24, unit: 'hour' },
+		{ amount: 7, unit: 'day' },
+		{ amount: 4.34524, unit: 'week' },
+		{ amount: 12, unit: 'month' },
+		{ amount: Number.POSITIVE_INFINITY, unit: 'year' },
+	];
+	const formatter = new Intl.RelativeTimeFormat(undefined, {
+		numeric: 'auto',
+	});
+	let duration = seconds;
+
+	for (const threshold of thresholds) {
+		if (Math.abs(duration) < threshold.amount) {
+			return formatter.format(Math.round(duration), threshold.unit);
+		}
+		duration /= threshold.amount;
+	}
+
+	return 'Recently';
+};
+
 const AuthorDashboard = () => {
 	const { userInfo } = useContext(UserContext);
 	const location = useLocation();
 
-	const [posts, setPosts] = useState([]);
-	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-	const [search, setSearch] = useState('');
-	const [currentPage, setCurrentPage] = useState(1);
+		const [posts, setPosts] = useState([]);
+		const [inboxData, setInboxData] = useState({
+			activities: [],
+			summary: {
+				totalReaderMessages: 0,
+				recentReaderMessages: 0,
+				activePosts: 0,
+				uniqueReaders: 0,
+			},
+		});
+		const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+		const [search, setSearch] = useState('');
+		const [currentPage, setCurrentPage] = useState(1);
 	const [pendingAction, setPendingAction] = useState(null);
 	const [isConfirmingAction, setIsConfirmingAction] = useState(false);
 
@@ -57,17 +105,63 @@ const AuthorDashboard = () => {
 	}, [location.pathname, location.hash]);
 
 	useEffect(() => {
-		fetch(`${API_URL}/post/mine`, {
-			credentials: 'include',
-		})
-			.then((res) => res.json())
-			.then((data) => {
-				setPosts(Array.isArray(data) ? data : []);
-			})
-			.catch(() => {
-				toast.error('Could not load your posts');
+		const loadDashboardData = async () => {
+			try {
+				const postsResponse = await fetch(`${API_URL}/post/mine`, {
+					credentials: 'include',
+				});
+				const postsData = await readJsonResponse(
+					postsResponse,
+					'Could not load your posts',
+				);
+				setPosts(Array.isArray(postsData) ? postsData : []);
+			} catch (error) {
+				console.error('Author posts load error:', error);
+				toast.error(error.message || 'Could not load your posts', {
+					id: 'author-posts-load-error',
+				});
 				setPosts([]);
-			});
+			}
+
+			try {
+				const inboxResponse = await fetch(`${API_URL}/comments/inbox/author`, {
+					credentials: 'include',
+				});
+				const inboxDataResponse = await readJsonResponse(
+					inboxResponse,
+					'Could not load your inbox activity',
+				);
+				setInboxData({
+					activities: Array.isArray(inboxDataResponse?.activities)
+						? inboxDataResponse.activities
+						: [],
+					summary: {
+						totalReaderMessages:
+							inboxDataResponse?.summary?.totalReaderMessages || 0,
+						recentReaderMessages:
+							inboxDataResponse?.summary?.recentReaderMessages || 0,
+						activePosts: inboxDataResponse?.summary?.activePosts || 0,
+						uniqueReaders: inboxDataResponse?.summary?.uniqueReaders || 0,
+					},
+				});
+			} catch (error) {
+				console.error('Author inbox load error:', error);
+				toast.error(error.message || 'Could not load your inbox activity', {
+					id: 'author-inbox-load-error',
+				});
+				setInboxData({
+					activities: [],
+					summary: {
+						totalReaderMessages: 0,
+						recentReaderMessages: 0,
+						activePosts: 0,
+						uniqueReaders: 0,
+					},
+				});
+			}
+		};
+
+		loadDashboardData();
 	}, []);
 
 	const myPosts = useMemo(() => posts, [posts]);
@@ -180,9 +274,9 @@ const AuthorDashboard = () => {
 		? Math.round((dominantCategory[1] / Math.max(myPosts.length, 1)) * 100)
 		: 0;
 
-	const authorAlerts = [
-		{
-			title: 'Refresh older stories',
+		const editorialReminders = [
+			{
+				title: 'Refresh older stories',
 			description:
 				olderPostsCount > 0
 					? `${olderPostsCount} posts are older than three weeks and could use a refresh, repost, or follow-up article.`
@@ -201,13 +295,8 @@ const AuthorDashboard = () => {
 				dominantCategory && dominantCategoryShare >= 60
 					? `${dominantCategory[0]} accounts for ${dominantCategoryShare}% of your posts. A new category could broaden your feed.`
 					: 'Your current category mix looks reasonably balanced for the posts available.',
-		},
-		{
-			title: 'Notifications next',
-			description:
-				'This inbox is ready to later include editorial notifications, comment activity, and emails sent to you as an author.',
-		},
-	];
+			},
+		];
 
 	const planItems = [
 		{
@@ -887,19 +976,106 @@ const AuthorDashboard = () => {
 										<Bell size={24} /> Inbox
 									</h2>
 									<p className="mt-2 text-sm text-slate-400">
-										For now this is your author alerts stream. Later it can hold notifications and email activity.
+										Reader activity on your posts, plus a smaller editorial reminder stream for follow-up work.
 									</p>
-									<div className="mt-6 space-y-3">
-										{authorAlerts.map((alert) => (
-											<div key={alert.title} className="rounded-[1.35rem] bg-slate-900/40 p-4">
+									<div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+										<div>
+											<div className="grid gap-3 sm:grid-cols-3">
+												<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+													<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+														Reader Messages
+													</p>
+													<p className="mt-3 text-2xl font-bold text-cyan-300">
+														{inboxData.summary.totalReaderMessages}
+													</p>
+													<p className="mt-1 text-sm text-slate-400">
+														Across your published posts
+													</p>
+												</div>
+												<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+													<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+														Last 7 Days
+													</p>
+													<p className="mt-3 text-2xl font-bold text-emerald-300">
+														{inboxData.summary.recentReaderMessages}
+													</p>
+													<p className="mt-1 text-sm text-slate-400">
+														New comments and replies
+													</p>
+												</div>
+												<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+													<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+														Unique Readers
+													</p>
+													<p className="mt-3 text-2xl font-bold text-violet-300">
+														{inboxData.summary.uniqueReaders}
+													</p>
+													<p className="mt-1 text-sm text-slate-400">
+														Across {inboxData.summary.activePosts} active posts
+													</p>
+												</div>
+											</div>
+
+											<div className="mt-4 space-y-3">
+												{inboxData.activities.length > 0 ? (
+													inboxData.activities.map((activity) => (
+														<div
+															key={activity._id}
+															className="rounded-[1.35rem] bg-slate-900/40 p-4">
+															<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+																<div className="min-w-0">
+																	<p className="text-sm font-semibold text-white">
+																		{activity.author?.username || 'A reader'}{' '}
+																		<span className="text-slate-400">
+																			left a {activity.type}
+																		</span>
+																	</p>
+																	<p className="mt-1 text-sm text-cyan-200">
+																		on{' '}
+																		<Link
+																			to={`/post/${activity.post?._id}`}
+																			className="hover:underline">
+																			{activity.post?.title || 'your post'}
+																		</Link>
+																	</p>
+																</div>
+																<p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+																	{formatRelativeTime(activity.createdAt)}
+																</p>
+															</div>
+															<p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-300">
+																{activity.content}
+															</p>
+														</div>
+													))
+												) : (
+													<div className="rounded-[1.35rem] bg-slate-900/40 p-4 text-sm leading-6 text-slate-400">
+														No reader activity yet. New comments on your posts will start appearing here.
+													</div>
+												)}
+											</div>
+										</div>
+
+										<div className="space-y-3">
+											<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
 												<p className="text-sm font-semibold text-white">
-													{alert.title}
+													Editorial Reminders
 												</p>
 												<p className="mt-2 text-sm leading-6 text-slate-400">
-													{alert.description}
+													Content follow-up notes based on your current library.
 												</p>
 											</div>
-										))}
+											{editorialReminders.map((alert) => (
+												<div key={alert.title} className="rounded-[1.35rem] bg-slate-900/40 p-4">
+													<p className="text-sm font-semibold text-white">
+														{alert.title}
+													</p>
+													<p className="mt-2 text-sm leading-6 text-slate-400">
+														{alert.description}
+													</p>
+												</div>
+											))}
+										</div>
 									</div>
 								</div>
 							</div>

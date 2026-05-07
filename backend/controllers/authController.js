@@ -2,7 +2,6 @@ import { User } from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const salt = await bcrypt.genSalt(10);
 const secret = process.env.JWT_SECRET;
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -23,12 +22,12 @@ export const register = async (req, res) => {
 		const normalizedUsername = normalizeUsername(username);
 		const normalizedEmail = normalizeEmail(email);
 		const normalizedPassword = password?.trim();
-
+		
 		// validation
 		if (!normalizedUsername || !normalizedEmail || !normalizedPassword) {
 			return res.status(400).json({ message: 'All fields are required' });
 		}
-
+		
 		// Check if user exists
 		const emailExists = await User.findOne({
 			email: new RegExp(`^${escapeRegex(normalizedEmail)}$`, 'i'),
@@ -36,14 +35,15 @@ export const register = async (req, res) => {
 		if (emailExists) {
 			return res.status(400).json({ message: 'Email already registered' });
 		}
-
+		
 		const usernameExists = await User.findOne({
 			username: new RegExp(`^${escapeRegex(normalizedUsername)}$`, 'i'),
 		});
 		if (usernameExists) {
 			return res.status(400).json({ message: 'Username already taken' });
 		}
-
+		
+		const salt = await bcrypt.genSalt(10);
 		const hashedPassword = await bcrypt.hash(normalizedPassword, salt);
 		
 		const newUser = await User.create({
@@ -92,6 +92,7 @@ export const login = async (req, res) => {
 		}
 
 		const normalizedIdentifier = normalizedUsername;
+		console.log("--------->",normalizedIdentifier)
 		const user = await User.findOne({
 			$or: [
 				{ username: new RegExp(`^${escapeRegex(normalizedIdentifier)}$`, 'i') },
@@ -99,25 +100,24 @@ export const login = async (req, res) => {
 			],
 		});
 
-	if (!user || !bcrypt.compareSync(normalizedPassword, user.password)) {
-			return res.status(400).json({ message: 'Wrong credentials' });
-		}
+	if(!user) return res.status(404).json({ message: 'User not found' });
 
-	jwt.sign(
+	const isPasswordValid = await bcrypt.compare(normalizedPassword, user.password);
+
+	if(!isPasswordValid) return res.status(400).json({ message: 'Invalid credentials' });
+
+	const token = await jwt.sign(
 		{ username: user.username, id: user._id, role: user.role },
 		secret,
 		{},
-		(err, token) => {
-				if (err) return res.status(500).json({ message: 'Error generating token', error: err.message });
-				res
-					.cookie('token', token, getTokenCookieOptions())
-					.json({
-						id: user._id,
-						username: user.username,
-					role: user.role,
-				});
-		},
 	);
+
+	res.cookie('token', token, getTokenCookieOptions()).json({
+		id: user._id,
+		username: user.username,
+		role: user.role,
+	});
+
 	} catch (error) {
 		console.log("Error in login controller.", error.message)
 		return res.status(500).json({message: 'Server error', error: error.message});
@@ -130,7 +130,7 @@ export const fetchProfile = (req, res) => {
 	if (!token) return res.json(null);
 
 	jwt.verify(token, secret, {}, (err, info) => {
-		if (err) return res.status(401).json('Unauthorized');
+		if (err) return res.status(401).json({message: 'Invalid token', error: err.message});
 		res.json({
 			id: info.id,
 			username: info.username,
@@ -201,6 +201,6 @@ export const getStats = async (req, res) => {
     ]);
     res.json({ totalUsers, totalAuthors, totalReaders, totalAdmins });
   } catch (error) {
-    res.status(500).json({message: 'Error fetching stats'});
+    res.status(500).json({message: 'Error fetching stats', error: error.message});
   }
 };

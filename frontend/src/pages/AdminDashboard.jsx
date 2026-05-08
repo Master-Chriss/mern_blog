@@ -26,65 +26,195 @@ import ConfirmationDialog from '../components/ConfirmationDialog';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 const USERS_PER_PAGE = 4;
 
+const formatDisplayDate = (value) => {
+	const date = new Date(value);
+	if (Number.isNaN(date.getTime())) {
+		return 'No date';
+	}
+
+	return date.toLocaleDateString(undefined, {
+		month: 'short',
+		day: 'numeric',
+		year: 'numeric',
+	});
+};
+
+const formatMonthLabel = (value) =>
+	new Intl.DateTimeFormat(undefined, {
+		month: 'short',
+	}).format(value);
+
+const formatRelativeTime = (value) => {
+	const date = new Date(value);
+	if (Number.isNaN(date.getTime())) return 'Recently';
+
+	const seconds = Math.round((date.getTime() - Date.now()) / 1000);
+	const thresholds = [
+		{ amount: 60, unit: 'second' },
+		{ amount: 60, unit: 'minute' },
+		{ amount: 24, unit: 'hour' },
+		{ amount: 7, unit: 'day' },
+		{ amount: 4.34524, unit: 'week' },
+		{ amount: 12, unit: 'month' },
+		{ amount: Number.POSITIVE_INFINITY, unit: 'year' },
+	];
+	const formatter = new Intl.RelativeTimeFormat(undefined, {
+		numeric: 'auto',
+	});
+	let duration = seconds;
+
+	for (const threshold of thresholds) {
+		if (Math.abs(duration) < threshold.amount) {
+			return formatter.format(Math.round(duration), threshold.unit);
+		}
+		duration /= threshold.amount;
+	}
+
+	return 'Recently';
+};
+
+const readJsonResponse = async (response, fallbackMessage) => {
+	const payload = await response.json().catch(() => null);
+
+	if (!response.ok) {
+		throw new Error(payload?.message || fallbackMessage);
+	}
+
+	return payload;
+};
+
 const AdminDashboard = () => {
-	const { userInfo } = useContext(UserContext);
+	const { userInfo, setUserInfo } = useContext(UserContext);
 	const location = useLocation();
 
 	const [users, setUsers] = useState([]);
 	const [posts, setPosts] = useState([]);
+	const [inboxData, setInboxData] = useState({
+		activities: [],
+		summary: {
+			totalReaderMessages: 0,
+			recentReaderMessages: 0,
+			activePosts: 0,
+			uniqueReaders: 0,
+		},
+	});
+	const [newsletterStats, setNewsletterStats] = useState({
+		activeSubscribers: 0,
+		totalEmails: 0,
+	});
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 	const [search, setSearch] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pendingAction, setPendingAction] = useState(null);
 	const [isConfirmingAction, setIsConfirmingAction] = useState(false);
 
-	const [stats, setStats] = useState({
-		totalPosts: 0,
-		totalUsers: 0,
-		totalAuthors: 0,
-		totalAdmins: 0,
-		totalReaders: 0,
-		totalSubscribers: 0,
-	});
-
 	useEffect(() => {
 		setIsSidebarOpen(false);
-	}, [location.pathname]);
+	}, [location.pathname, location.hash]);
 
 	useEffect(() => {
-		fetch(`${API_URL}/post`)
-			.then((res) => res.json())
-			.then((data) => {
-				setPosts(data);
-				setStats((prev) => ({ ...prev, totalPosts: data.length }));
-			});
+		const loadDashboardData = async () => {
+			try {
+				const postsResponse = await fetch(`${API_URL}/post/admin/all`, {
+					credentials: 'include',
+				});
+				const postsData = await readJsonResponse(
+					postsResponse,
+					'Could not load posts',
+				);
+				setPosts(Array.isArray(postsData) ? postsData : []);
+			} catch (error) {
+				console.error('Admin posts load error:', error);
+				toast.error(error.message || 'Could not load posts', {
+					id: 'admin-posts-load-error',
+				});
+				setPosts([]);
+			}
 
-		fetch(`${API_URL}/auth/users`, { credentials: 'include' })
-			.then((res) => res.json())
-			.then((data) => {
-				setUsers(data);
-				const authors = data.filter((u) => u.role === 'author').length;
-				const admins = data.filter((u) => u.role === 'admin').length;
-				const readers = data.filter((u) => u.role === 'reader').length;
+			try {
+				const usersResponse = await fetch(`${API_URL}/auth/users`, {
+					credentials: 'include',
+				});
+				const usersData = await readJsonResponse(
+					usersResponse,
+					'Could not load users',
+				);
+				setUsers(Array.isArray(usersData) ? usersData : []);
+			} catch (error) {
+				console.error('Admin users load error:', error);
+				toast.error(error.message || 'Could not load users', {
+					id: 'admin-users-load-error',
+				});
+				setUsers([]);
+			}
 
-				setStats((prev) => ({
-					...prev,
-					totalUsers: data.length,
-					totalAuthors: authors,
-					totalAdmins: admins,
-					totalReaders: readers,
-				}));
-			});
+			try {
+				const inboxResponse = await fetch(`${API_URL}/comments/inbox/admin`, {
+					credentials: 'include',
+				});
+				const inboxResponseData = await readJsonResponse(
+					inboxResponse,
+					'Could not load inbox activity',
+				);
+				setInboxData({
+					activities: Array.isArray(inboxResponseData?.activities)
+						? inboxResponseData.activities
+						: [],
+					summary: {
+						totalReaderMessages:
+							inboxResponseData?.summary?.totalReaderMessages || 0,
+						recentReaderMessages:
+							inboxResponseData?.summary?.recentReaderMessages || 0,
+						activePosts: inboxResponseData?.summary?.activePosts || 0,
+						uniqueReaders: inboxResponseData?.summary?.uniqueReaders || 0,
+					},
+				});
+			} catch (error) {
+				console.error('Admin inbox load error:', error);
+				toast.error(error.message || 'Could not load inbox activity', {
+					id: 'admin-inbox-load-error',
+				});
+				setInboxData({
+					activities: [],
+					summary: {
+						totalReaderMessages: 0,
+						recentReaderMessages: 0,
+						activePosts: 0,
+						uniqueReaders: 0,
+					},
+				});
+			}
 
-		fetch(`${API_URL}/newsletter/stats`)
-			.then((res) => res.json())
-			.then((data) => {
-				setStats((prev) => ({
-					...prev,
-					totalSubscribers: data.activeSubscribers,
-				}));
-			});
+			try {
+				const newsletterResponse = await fetch(`${API_URL}/newsletter/stats`);
+				const newsletterData = await readJsonResponse(
+					newsletterResponse,
+					'Could not load subscriber stats',
+				);
+				setNewsletterStats({
+					activeSubscribers: newsletterData?.activeSubscribers || 0,
+					totalEmails: newsletterData?.totalEmails || 0,
+				});
+			} catch (error) {
+				console.error('Newsletter stats load error:', error);
+				toast.error(error.message || 'Could not load subscriber stats', {
+					id: 'admin-newsletter-load-error',
+				});
+				setNewsletterStats({
+					activeSubscribers: 0,
+					totalEmails: 0,
+				});
+			}
+		};
+
+		loadDashboardData();
 	}, []);
+
+	const totalUsers = users.length;
+	const totalAuthors = users.filter((user) => user.role === 'author').length;
+	const totalAdmins = users.filter((user) => user.role === 'admin').length;
+	const totalReaders = users.filter((user) => user.role === 'reader').length;
+	const totalSubscribers = newsletterStats.activeSubscribers;
 
 	const filteredUsers = useMemo(
 		() =>
@@ -108,6 +238,230 @@ const AdminDashboard = () => {
 		(currentPage - 1) * USERS_PER_PAGE,
 		currentPage * USERS_PER_PAGE,
 	);
+
+	const now = new Date();
+	const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+	const weekStart = new Date(now);
+	weekStart.setDate(now.getDate() - 7);
+
+	const recentPosts = posts.slice(0, 4);
+	const thisMonthPosts = posts.filter(
+		(post) => new Date(post.createdAt) >= monthStart,
+	).length;
+	const thisWeekPosts = posts.filter(
+		(post) => new Date(post.createdAt) >= weekStart,
+	).length;
+	const postsWithoutTags = posts.filter((post) => (post.tags || []).length === 0).length;
+	const postsWithoutCategory = posts.filter((post) => !post.category).length;
+
+	const categoryBreakdown = Object.entries(
+		posts.reduce((accumulator, post) => {
+			const key = post.category || 'General';
+			accumulator[key] = (accumulator[key] || 0) + 1;
+			return accumulator;
+		}, {}),
+	).sort((a, b) => b[1] - a[1]);
+
+	const dominantCategory = categoryBreakdown[0] || null;
+	const dominantCategoryShare = dominantCategory
+		? Math.round((dominantCategory[1] / Math.max(posts.length, 1)) * 100)
+		: 0;
+
+	const monthlyBreakdown = Array.from({ length: 4 }, (_, index) => {
+		const date = new Date(now.getFullYear(), now.getMonth() - (3 - index), 1);
+		const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+		const count = posts.filter((post) => {
+			const postDate = new Date(post.createdAt);
+			return postDate >= date && postDate < nextMonth;
+		}).length;
+
+		return {
+			label: formatMonthLabel(date),
+			count,
+		};
+	});
+
+	const busiestMonthCount = Math.max(
+		...monthlyBreakdown.map((item) => item.count),
+		1,
+	);
+
+	const authorBreakdown = Object.entries(
+		posts.reduce((accumulator, post) => {
+			const key = post.author?.username || 'Unknown';
+			accumulator[key] = (accumulator[key] || 0) + 1;
+			return accumulator;
+		}, {}),
+	)
+		.sort((a, b) => b[1] - a[1])
+		.slice(0, 5);
+
+	const authorsWithoutPosts = users.filter(
+		(user) =>
+			user.role === 'author' &&
+			!posts.some((post) => String(post.author?._id) === String(user._id)),
+	).length;
+
+	const inactiveAuthors = users.filter((user) => {
+		if (user.role !== 'author') return false;
+		const authoredPosts = posts.filter(
+			(post) => String(post.author?._id) === String(user._id),
+		);
+		if (authoredPosts.length === 0) return false;
+
+		const latestPostDate = authoredPosts.reduce((latest, post) => {
+			const createdAt = new Date(post.createdAt);
+			return createdAt > latest ? createdAt : latest;
+		}, new Date(0));
+
+		return (now.getTime() - latestPostDate.getTime()) / 86400000 > 21;
+	}).length;
+
+	const subscriberConversion =
+		totalUsers > 0 ? Math.round((totalSubscribers / totalUsers) * 100) : 0;
+	const readersPerAuthor =
+		totalAuthors > 0 ? Math.round((totalReaders / totalAuthors) * 10) / 10 : 0;
+	const postsPerAuthor =
+		totalAuthors > 0 ? Math.round((posts.length / totalAuthors) * 10) / 10 : 0;
+
+	const inboxReminders = [
+		{
+			title: 'Inactive author watch',
+			description:
+				inactiveAuthors > 0
+					? `${inactiveAuthors} authors have published before but have been quiet for more than three weeks.`
+					: 'No previously active authors are currently slipping out of rhythm.',
+		},
+		{
+			title: 'Metadata cleanup',
+			description:
+				postsWithoutTags > 0 || postsWithoutCategory > 0
+					? `${postsWithoutTags} posts need tags and ${postsWithoutCategory} posts need clearer category assignment.`
+					: 'Your latest content metadata looks clean across categories and tags.',
+		},
+		{
+			title: 'Subscriber pulse',
+			description:
+				totalSubscribers > 0
+					? `${totalSubscribers} active subscribers are in your newsletter funnel right now.`
+					: 'No active subscribers yet, so audience capture needs more attention.',
+		},
+	];
+
+	const planItems = [
+		{
+			label: 'Publishing cadence',
+			value: `${thisWeekPosts} posts in the last 7 days and ${thisMonthPosts} this month.`,
+		},
+		{
+			label: 'Author coverage',
+			value:
+				authorsWithoutPosts > 0
+					? `${authorsWithoutPosts} authors have no published stories yet and may need onboarding or assignments.`
+					: 'Every current author has at least one published story.',
+		},
+		{
+			label: 'Category balance',
+			value:
+				dominantCategory && dominantCategoryShare >= 55
+					? `${dominantCategory[0]} currently makes up ${dominantCategoryShare}% of recent publishing.`
+					: 'Your current category mix is reasonably balanced.',
+		},
+		{
+			label: 'Audience capture',
+			value:
+				subscriberConversion > 0
+					? `${subscriberConversion}% of registered users are also active newsletter subscribers.`
+					: 'There is no visible newsletter conversion yet from registered users.',
+		},
+	];
+
+	const settingsCards = [
+		{
+			title: 'Access Control',
+			description: `${totalAdmins} admins, ${totalAuthors} authors, and ${totalReaders} readers are currently active in role distribution.`,
+		},
+		{
+			title: 'Content Taxonomy',
+			description:
+				postsWithoutCategory > 0 || postsWithoutTags > 0
+					? `${postsWithoutCategory} posts lack category clarity and ${postsWithoutTags} still need tags.`
+					: 'Posts are currently categorized and tagged with good consistency.',
+		},
+		{
+			title: 'Moderation Surface',
+			description: `${inboxData.summary.totalReaderMessages} reader messages exist across ${inboxData.summary.activePosts} active discussion posts.`,
+		},
+	];
+
+	const statCards = [
+		{
+			label: 'Posts',
+			value: posts.length,
+			icon: <PenTool size={20} />,
+			valueClassName: 'text-cyan-400',
+			iconClassName: 'text-cyan-300',
+			panelClassName: 'bg-cyan-500/8',
+		},
+		{
+			label: 'Users',
+			value: totalUsers,
+			icon: <Users size={20} />,
+			valueClassName: 'text-emerald-400',
+			iconClassName: 'text-emerald-300',
+			panelClassName: 'bg-emerald-500/8',
+		},
+		{
+			label: 'Authors',
+			value: totalAuthors,
+			icon: <UserPen size={20} />,
+			valueClassName: 'text-violet-400',
+			iconClassName: 'text-violet-300',
+			panelClassName: 'bg-violet-500/8',
+		},
+		{
+			label: 'Readers',
+			value: totalReaders,
+			icon: <UsersRound size={20} />,
+			valueClassName: 'text-amber-400',
+			iconClassName: 'text-amber-300',
+			panelClassName: 'bg-amber-500/8',
+		},
+		{
+			label: 'Admins',
+			value: totalAdmins,
+			icon: <UserCog size={20} />,
+			valueClassName: 'text-sky-400',
+			iconClassName: 'text-sky-300',
+			panelClassName: 'bg-sky-500/8',
+		},
+		{
+			label: 'Subscribers',
+			value: totalSubscribers,
+			icon: <Mail size={20} />,
+			valueClassName: 'text-rose-400',
+			iconClassName: 'text-rose-300',
+			panelClassName: 'bg-rose-500/8',
+		},
+	];
+
+	const menuItems = [
+		{ icon: <Home size={18} />, label: 'Dashboard', path: '/admin' },
+		{ icon: <FileText size={18} />, label: 'My Articles', path: '/admin#articles' },
+		{ icon: <Mail size={18} />, label: 'Inbox', path: '/admin#inbox' },
+		{
+			icon: <ChartColumn size={18} />,
+			label: 'Analytics',
+			path: '/admin#analytics',
+		},
+		{
+			icon: <CalendarDays size={18} />,
+			label: 'Post Plan',
+			path: '/admin#plan',
+		},
+		{ icon: <Wallet size={18} />, label: 'Earnings', path: '/admin#earnings' },
+		{ icon: <Settings size={18} />, label: 'Settings', path: '/admin#settings' },
+	];
 
 	const updateUserRole = async (userId, newRole) => {
 		const res = await fetch(`${API_URL}/auth/user/${userId}`, {
@@ -164,6 +518,21 @@ const AdminDashboard = () => {
 		toast.error('Failed to delete post');
 	};
 
+	const handleLogout = async () => {
+		const response = await fetch(`${API_URL}/auth/logout`, {
+			method: 'POST',
+			credentials: 'include',
+		});
+
+		if (response.ok) {
+			setUserInfo(null);
+			toast.success('Logged out successfully');
+			return;
+		}
+
+		toast.error('Logout failed');
+	};
+
 	const openDeleteUserConfirm = (user) => {
 		setPendingAction({
 			title: 'Delete this user account?',
@@ -194,67 +563,6 @@ const AdminDashboard = () => {
 			setPendingAction(null);
 		}
 	};
-
-	const menuItems = [
-		{ icon: <Home size={18} />, label: 'Dashboard', path: '/admin' },
-		{ icon: <FileText size={18} />, label: 'My Articles', path: '/my-articles' },
-		{ icon: <ChartColumn size={18} />, label: 'Analytics', path: '/analytics' },
-		{ icon: <Mail size={18} />, label: 'Inbox', path: '/inbox' },
-		{ icon: <CalendarDays size={18} />, label: 'Post Plan', path: '/plan' },
-		{ icon: <Wallet size={18} />, label: 'Earning', path: '/earning' },
-		{ icon: <Settings size={18} />, label: 'Settings', path: '/settings' },
-	];
-
-	const statCards = [
-		{
-			label: 'Posts',
-			value: stats.totalPosts,
-			icon: <PenTool size={20} />,
-			valueClassName: 'text-cyan-400',
-			iconClassName: 'text-cyan-300',
-			panelClassName: 'bg-cyan-500/8',
-		},
-		{
-			label: 'Users',
-			value: stats.totalUsers,
-			icon: <Users size={20} />,
-			valueClassName: 'text-emerald-400',
-			iconClassName: 'text-emerald-300',
-			panelClassName: 'bg-emerald-500/8',
-		},
-		{
-			label: 'Authors',
-			value: stats.totalAuthors,
-			icon: <UserPen size={20} />,
-			valueClassName: 'text-violet-400',
-			iconClassName: 'text-violet-300',
-			panelClassName: 'bg-violet-500/8',
-		},
-		{
-			label: 'Readers',
-			value: stats.totalReaders,
-			icon: <UsersRound size={20} />,
-			valueClassName: 'text-amber-400',
-			iconClassName: 'text-amber-300',
-			panelClassName: 'bg-amber-500/8',
-		},
-		{
-			label: 'Admins',
-			value: stats.totalAdmins,
-			icon: <UserCog size={20} />,
-			valueClassName: 'text-sky-400',
-			iconClassName: 'text-sky-300',
-			panelClassName: 'bg-sky-500/8',
-		},
-		{
-			label: 'Subscribers',
-			value: stats.totalSubscribers,
-			icon: <Mail size={20} />,
-			valueClassName: 'text-rose-400',
-			iconClassName: 'text-rose-300',
-			panelClassName: 'bg-rose-500/8',
-		},
-	];
 
 	if (!userInfo || userInfo.role !== 'admin') {
 		return <Navigate to="/" />;
@@ -292,12 +600,16 @@ const AdminDashboard = () => {
 					Close
 				</button>
 
-				<nav className="mt-2 flex-1 space-y-2">
+				<nav className="mt-2 flex-1 space-y-2 overflow-y-auto">
 					<p className="px-3 text-xs uppercase tracking-wider text-slate-500">
 						Navigation
 					</p>
 					{menuItems.map((item) => {
-						const isActive = location.pathname === item.path;
+						const itemUrl = new URL(item.path, 'http://localhost');
+						const isActive =
+							location.pathname === itemUrl.pathname &&
+							(location.hash || '') === (itemUrl.hash || '');
+
 						return (
 							<Link
 								key={item.path}
@@ -315,7 +627,9 @@ const AdminDashboard = () => {
 					})}
 				</nav>
 
-				<button className="mt-6 flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-300 transition hover:bg-white/5 hover:text-red-400">
+				<button
+					onClick={handleLogout}
+					className="mt-6 flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-300 transition hover:bg-white/5 hover:text-red-400">
 					<LogOut size={18} /> Logout
 				</button>
 			</aside>
@@ -339,18 +653,15 @@ const AdminDashboard = () => {
 											Hello {userInfo.username}!
 										</h1>
 										<p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-											Welcome to your admin dashboard. Review platform activity,
-											manage your team, and keep publishing moving smoothly on any
-											screen size.
+											Review platform activity, manage your team, and keep publishing
+											moving smoothly from one operational workspace.
 										</p>
 									</div>
 								</div>
 
 								<div className="flex flex-col gap-3 sm:flex-row">
 									<div className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-300">
-										<span className="font-semibold text-white">
-											{stats.totalUsers}
-										</span>{' '}
+										<span className="font-semibold text-white">{totalUsers}</span>{' '}
 										registered users
 									</div>
 									<Link
@@ -383,12 +694,14 @@ const AdminDashboard = () => {
 						</section>
 
 						<section className="mt-6 space-y-6">
-							<div className="rounded-[2rem] bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
+							<div
+								id="articles"
+								className="rounded-[2rem] bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
 								<div className="mb-6 flex items-end justify-between gap-4">
 									<div>
 										<h2 className="text-2xl font-bold text-white">Top Articles</h2>
 										<p className="mt-2 text-sm text-slate-400">
-											Your latest stories with quick actions.
+											Latest published stories with quick moderation actions.
 										</p>
 									</div>
 									<p className="text-sm text-slate-500">
@@ -397,7 +710,7 @@ const AdminDashboard = () => {
 								</div>
 
 								<div className="space-y-3">
-									{posts.slice(0, 4).map((post, index) => (
+									{recentPosts.map((post, index) => (
 										<div
 											key={post._id}
 											className="rounded-[1.35rem] bg-slate-900/40 px-4 py-3 transition hover:bg-slate-900/70 sm:px-5">
@@ -411,7 +724,8 @@ const AdminDashboard = () => {
 															{post.title}
 														</h3>
 														<p className="mt-1 text-sm text-slate-400">
-															@{post.author?.username}
+															@{post.author?.username || 'unknown'} •{' '}
+															{formatDisplayDate(post.createdAt)}
 														</p>
 													</div>
 												</div>
@@ -433,6 +747,11 @@ const AdminDashboard = () => {
 											</div>
 										</div>
 									))}
+									{posts.length === 0 && (
+										<div className="rounded-[1.35rem] bg-slate-900/40 px-4 py-6 text-sm text-slate-400">
+											No posts are available yet.
+										</div>
+									)}
 								</div>
 							</div>
 
@@ -467,7 +786,7 @@ const AdminDashboard = () => {
 											<div className="flex items-start justify-between gap-3">
 												<div className="min-w-0">
 													<p className="truncate text-base font-semibold text-white">
-														{user.username}
+														{user.username.chartAt(0).toUpperCase() + user.username.slice(1)}
 													</p>
 													<p className="mt-1 break-all text-sm text-slate-400">
 														{user.email}
@@ -500,7 +819,7 @@ const AdminDashboard = () => {
 														Joined
 													</p>
 													<p className="mt-3 text-sm text-slate-300">
-														{new Date(user.createdAt).toLocaleDateString()}
+														{formatDisplayDate(user.createdAt)}
 													</p>
 												</div>
 											</div>
@@ -531,9 +850,7 @@ const AdminDashboard = () => {
 													<td className="px-6 py-4">
 														<select
 															value={user.role}
-															onChange={(e) =>
-																updateUserRole(user._id, e.target.value)
-															}
+															onChange={(e) => updateUserRole(user._id, e.target.value)}
 															className="rounded-xl bg-slate-950/60 px-3 py-2 text-sm text-white">
 															<option value="reader">Reader</option>
 															<option value="author">Author</option>
@@ -541,7 +858,7 @@ const AdminDashboard = () => {
 														</select>
 													</td>
 													<td className="px-6 py-4 text-slate-400">
-														{new Date(user.createdAt).toLocaleDateString()}
+														{formatDisplayDate(user.createdAt)}
 													</td>
 													<td className="px-6 py-4">
 														<button
@@ -595,6 +912,360 @@ const AdminDashboard = () => {
 											Next
 										</button>
 									</div>
+								</div>
+							</div>
+
+							<div
+								id="inbox"
+								className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
+								<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
+									<Mail size={24} /> Inbox
+								</h2>
+								<p className="mt-2 text-sm text-slate-400">
+									Live platform activity from reader comments and audience growth.
+								</p>
+								<div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+									<div>
+										<div className="grid gap-3 sm:grid-cols-3">
+											<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+												<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+													Reader Messages
+												</p>
+												<p className="mt-3 text-2xl font-bold text-cyan-300">
+													{inboxData.summary.totalReaderMessages}
+												</p>
+												<p className="mt-1 text-sm text-slate-400">
+													Across all published posts
+												</p>
+											</div>
+											<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+												<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+													Last 7 Days
+												</p>
+												<p className="mt-3 text-2xl font-bold text-emerald-300">
+													{inboxData.summary.recentReaderMessages}
+												</p>
+												<p className="mt-1 text-sm text-slate-400">
+													New comments and replies
+												</p>
+											</div>
+											<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+												<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+													Active Discussions
+												</p>
+												<p className="mt-3 text-2xl font-bold text-violet-300">
+													{inboxData.summary.activePosts}
+												</p>
+												<p className="mt-1 text-sm text-slate-400">
+													{inboxData.summary.uniqueReaders} unique readers involved
+												</p>
+											</div>
+										</div>
+
+										<div className="mt-4 space-y-3">
+											{inboxData.activities.length > 0 ? (
+												inboxData.activities.map((activity) => (
+													<div
+														key={activity._id}
+														className="rounded-[1.35rem] bg-slate-900/40 p-4">
+														<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+															<div className="min-w-0">
+																<p className="text-sm font-semibold text-white">
+																	{activity.author?.username || 'A reader'}{' '}
+																	<span className="text-slate-400">
+																		left a {activity.type}
+																	</span>
+																</p>
+																<p className="mt-1 text-sm text-cyan-200">
+																	on{' '}
+																	<Link
+																		to={`/post/${activity.post?._id}`}
+																		className="hover:underline">
+																		{activity.post?.title || 'a post'}
+																	</Link>{' '}
+																	<span className="text-slate-400">
+																		by @{activity.post?.author || 'unknown'}
+																	</span>
+																</p>
+															</div>
+															<p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+																{formatRelativeTime(activity.createdAt)}
+															</p>
+														</div>
+														<p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-300">
+															{activity.content}
+														</p>
+													</div>
+												))
+											) : (
+												<div className="rounded-[1.35rem] bg-slate-900/40 p-4 text-sm leading-6 text-slate-400">
+													No reader activity yet. Fresh comment activity will surface here.
+												</div>
+											)}
+										</div>
+									</div>
+
+									<div className="space-y-3">
+										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+											<p className="text-sm font-semibold text-white">
+												Operational Notes
+											</p>
+											<p className="mt-2 text-sm leading-6 text-slate-400">
+												Quick admin prompts grounded in current publishing and audience data.
+											</p>
+										</div>
+										{inboxReminders.map((item) => (
+											<div
+												key={item.title}
+												className="rounded-[1.35rem] bg-slate-900/40 p-4">
+												<p className="text-sm font-semibold text-white">{item.title}</p>
+												<p className="mt-2 text-sm leading-6 text-slate-400">
+													{item.description}
+												</p>
+											</div>
+										))}
+									</div>
+								</div>
+							</div>
+
+							<div
+								id="analytics"
+								className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
+								<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
+									<ChartColumn size={24} /> Analytics
+								</h2>
+								<p className="mt-2 text-sm text-slate-400">
+									Platform-wide content, audience, and author signals.
+								</p>
+								<div className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+									<div className="space-y-3">
+										<div className="grid gap-3 sm:grid-cols-3">
+											<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+												<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+													Dominant Category
+												</p>
+												<p className="mt-3 text-lg font-semibold text-white">
+													{dominantCategory?.[0] || 'No data'}
+												</p>
+												<p className="mt-1 text-sm text-slate-400">
+													{dominantCategory
+														? `${dominantCategoryShare}% of posts`
+														: 'Publish to unlock'}
+												</p>
+											</div>
+											<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+												<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+													Readers per Author
+												</p>
+												<p className="mt-3 text-lg font-semibold text-white">
+													{readersPerAuthor}
+												</p>
+												<p className="mt-1 text-sm text-slate-400">
+													Based on current role mix
+												</p>
+											</div>
+											<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+												<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+													Subscriber Reach
+												</p>
+												<p className="mt-3 text-lg font-semibold text-white">
+													{subscriberConversion}%
+												</p>
+												<p className="mt-1 text-sm text-slate-400">
+													Users in newsletter funnel
+												</p>
+											</div>
+										</div>
+
+										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+											<div className="flex items-center justify-between gap-4">
+												<p className="text-sm font-semibold text-white">
+													Category Breakdown
+												</p>
+												<p className="text-sm text-slate-500">{posts.length} total posts</p>
+											</div>
+											<div className="mt-4 space-y-3">
+												{categoryBreakdown.length > 0 ? (
+													categoryBreakdown.slice(0, 5).map(([category, count]) => (
+														<div key={category}>
+															<div className="flex items-center justify-between gap-4">
+																<p className="text-sm text-white">{category}</p>
+																<p className="text-sm text-cyan-300">{count}</p>
+															</div>
+															<div className="mt-2 h-2 rounded-full bg-white/5">
+																<div
+																	className="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500"
+																	style={{
+																		width: `${Math.max(
+																			16,
+																			(count / Math.max(posts.length, 1)) * 100,
+																		)}%`,
+																	}}
+																/>
+															</div>
+														</div>
+													))
+												) : (
+													<p className="text-sm text-slate-400">
+														Publishing analytics will appear once posts exist.
+													</p>
+												)}
+											</div>
+										</div>
+									</div>
+
+									<div className="space-y-3">
+										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+											<p className="text-sm font-semibold text-white">Publishing Rhythm</p>
+											<div className="mt-4 grid grid-cols-4 gap-3">
+												{monthlyBreakdown.map((item) => (
+													<div key={item.label} className="text-center">
+														<div className="flex h-28 items-end justify-center rounded-2xl bg-white/5 px-2 pb-3">
+															<div
+																className="w-full rounded-xl bg-gradient-to-t from-cyan-500 to-purple-500"
+																style={{
+																	height: `${Math.max(
+																		14,
+																		(item.count / busiestMonthCount) * 88,
+																	)}px`,
+																}}
+															/>
+														</div>
+														<p className="mt-3 text-xs uppercase tracking-[0.18em] text-slate-500">
+															{item.label}
+														</p>
+														<p className="mt-1 text-sm text-white">{item.count}</p>
+													</div>
+												))}
+											</div>
+										</div>
+
+										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+											<p className="text-sm font-semibold text-white">Top Authors</p>
+											<div className="mt-4 space-y-3">
+												{authorBreakdown.length > 0 ? (
+													authorBreakdown.map(([author, count]) => (
+														<div
+															key={author}
+															className="flex items-center justify-between gap-4">
+															<p className="text-sm text-white">@{author}</p>
+															<p className="text-sm text-cyan-300">{count} posts</p>
+														</div>
+													))
+												) : (
+													<p className="text-sm text-slate-400">
+														Author distribution will appear once posts exist.
+													</p>
+												)}
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div className="grid gap-6 xl:grid-cols-2">
+								<div
+									id="plan"
+									className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
+									<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
+										<CalendarDays size={24} /> Post Plan
+									</h2>
+									<p className="mt-2 text-sm text-slate-400">
+										Operational next steps based on current publishing and team data.
+									</p>
+									<div className="mt-6 grid gap-3 sm:grid-cols-2">
+										{planItems.map((item) => (
+											<div
+												key={item.label}
+												className="rounded-[1.35rem] bg-slate-900/40 p-4">
+												<p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+													{item.label}
+												</p>
+												<p className="mt-3 text-sm leading-6 text-white">
+													{item.value}
+												</p>
+											</div>
+										))}
+									</div>
+								</div>
+
+								<div
+									id="earnings"
+									className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
+									<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
+										<Wallet size={24} /> Earnings
+									</h2>
+									<p className="mt-2 text-sm text-slate-400">
+										Real monetization-readiness signals from your audience and content supply.
+									</p>
+									<div className="mt-6 grid gap-3 sm:grid-cols-2">
+										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+											<p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+												Audience Base
+											</p>
+											<p className="mt-3 text-lg font-semibold text-white">
+												{totalSubscribers} active subscribers
+											</p>
+											<p className="mt-2 text-sm leading-6 text-slate-400">
+												{newsletterStats.totalEmails} total captured emails on record.
+											</p>
+										</div>
+										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+											<p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+												Content Supply
+											</p>
+											<p className="mt-3 text-lg font-semibold text-white">
+												{postsPerAuthor} posts per author
+											</p>
+											<p className="mt-2 text-sm leading-6 text-slate-400">
+												Average story output across current authors.
+											</p>
+										</div>
+										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+											<p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+												Newsletter Conversion
+											</p>
+											<p className="mt-3 text-lg font-semibold text-white">
+												{subscriberConversion}%
+											</p>
+											<p className="mt-2 text-sm leading-6 text-slate-400">
+												Share of registered users currently in the newsletter funnel.
+											</p>
+										</div>
+										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+											<p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+												Readiness Note
+											</p>
+											<p className="mt-3 text-sm leading-6 text-white">
+												{totalSubscribers >= 50
+													? 'Your audience is large enough to start testing sponsor, premium, or newsletter monetization experiments.'
+													: 'Keep growing subscribers and publishing consistency before expecting meaningful revenue experiments to convert.'}
+											</p>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div
+								id="settings"
+								className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
+								<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
+									<Settings size={24} /> Settings
+								</h2>
+								<p className="mt-2 text-sm text-slate-400">
+									System health and governance notes based on the current platform state.
+								</p>
+								<div className="mt-6 grid gap-3 sm:grid-cols-3">
+									{settingsCards.map((card) => (
+										<div
+											key={card.title}
+											className="rounded-[1.35rem] bg-slate-900/40 p-4">
+											<p className="text-sm font-semibold text-white">{card.title}</p>
+											<p className="mt-2 text-sm leading-6 text-slate-400">
+												{card.description}
+											</p>
+										</div>
+									))}
 								</div>
 							</div>
 						</section>

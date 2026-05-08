@@ -106,6 +106,69 @@ export const getAuthorInbox = async (req, res) => {
 	}
 };
 
+export const getAdminInbox = async (req, res) => {
+	try {
+		if (req.user.role !== 'admin') {
+			return res.status(403).json({ message: 'Admins only' });
+		}
+
+		const comments = await populateCommentAuthor(
+			Comment.find({})
+				.populate({
+					path: 'post',
+					select: 'title author',
+					populate: {
+						path: 'author',
+						select: 'username',
+					},
+				})
+				.sort({ createdAt: -1 })
+				.limit(12),
+		);
+
+		const allComments = await Comment.find({}).select('author post createdAt');
+
+		const activities = comments.map((comment) => ({
+			_id: comment._id,
+			type: comment.parentComment ? 'reply' : 'comment',
+			content: comment.content,
+			createdAt: comment.createdAt,
+			post: {
+				_id: comment.post?._id || null,
+				title: comment.post?.title || 'Untitled post',
+				author: comment.post?.author?.username || 'Unknown author',
+			},
+			author: comment.author,
+		}));
+
+		const lastSevenDays = new Date();
+		lastSevenDays.setDate(lastSevenDays.getDate() - 7);
+
+		const uniqueReaders = new Set(
+			allComments.map((comment) => comment.author.toString()),
+		).size;
+		const activePosts = new Set(
+			allComments.map((comment) => comment.post.toString()),
+		).size;
+		const recentReaderMessages = allComments.filter(
+			(comment) => new Date(comment.createdAt) >= lastSevenDays,
+		).length;
+
+		res.json({
+			activities,
+			summary: {
+				totalReaderMessages: allComments.length,
+				recentReaderMessages,
+				activePosts,
+				uniqueReaders,
+			},
+		});
+	} catch (error) {
+		console.error('Error fetching admin inbox:', error);
+		res.status(500).json({ message: 'Server error' });
+	}
+};
+
 export const createComment = async (req, res) => {
 	const { postId } = req.params;
 	const { content, parentCommentId } = req.body;

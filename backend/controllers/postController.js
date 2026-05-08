@@ -111,6 +111,22 @@ export const getPosts = async (req, res) => {
 	}
 };
 
+export const getAllPostsAdmin = async (req, res) => {
+	try {
+		if (req.user.role !== 'admin') {
+			return res.status(403).json({ message: 'Admins only' });
+		}
+
+		const posts = await Post.find()
+			.populate('author', ['username'])
+			.sort({ createdAt: -1 });
+		res.json(posts);
+	} catch (error) {
+		console.error('Error fetching admin posts:', error);
+		res.status(500).json({ message: 'Server error' });
+	}
+};
+
 export const getMyPosts = async (req, res) => {
 	try {
 		const posts = await Post.find({ author: req.user.id })

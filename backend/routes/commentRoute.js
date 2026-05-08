@@ -3,6 +3,7 @@ import {
 	createComment,
 	deleteComment,
 	deleteCommentReply,
+	getAdminInbox,
 	getAuthorInbox,
 	getCommentsByPost,
 	toggleCommentLike,
@@ -11,6 +12,7 @@ import { verifyToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
+router.get('/inbox/admin', verifyToken, getAdminInbox);
 router.get('/inbox/author', verifyToken, getAuthorInbox);
 router.get('/post/:postId', getCommentsByPost);
 router.post('/post/:postId', verifyToken, createComment);

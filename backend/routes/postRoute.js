@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import {
 	createPost,
+	getAllPostsAdmin,
 	getPosts,
 	getMyPosts,
 	getSinglePost,
@@ -22,6 +23,7 @@ const memoryUpload = multer({ storage: multer.memoryStorage() , limits: { fileSi
 
 // ADMIN ROUTES FIRST (more specific)
 router.get('/admin/cleanup/preview', previewOrphanedImages);
+router.get('/admin/all', verifyToken, getAllPostsAdmin);
 router.post('/admin/cleanup/execute', cleanupOrphanedImages);
 router.delete('/admin/image', deleteSpecificImage);
 router.post('/admin/upload-temp', upload.single('file'), uploadTempImage);

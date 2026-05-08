@@ -131,6 +131,7 @@ export const fetchProfile = (req, res) => {
 
 	jwt.verify(token, secret, {}, (err, info) => {
 		if (err) return res.status(401).json({message: 'Invalid token', error: err.message});
+		
 		res.json({
 			id: info.id,
 			username: info.username,

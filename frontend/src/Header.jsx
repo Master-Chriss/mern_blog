@@ -121,7 +121,7 @@ const Header = () => {
 									<>
 										<div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
 											<CircleUserRound className="h-4 w-4 text-cyan-400" />
-											<span className="text-sm text-white/90">{username}</span>
+											<span className="text-sm text-white/90">{username.charAt(0).toUpperCase() + username.slice(1)}</span>
 											{userInfo.role !== 'reader' && (
 												<span className="text-xs text-blue-300">
 													({userInfo.role})
@@ -200,7 +200,7 @@ const Header = () => {
 									<>
 										<div className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2">
 											<CircleUserRound className="h-5 w-5 text-cyan-400" />
-											<span className="text-sm text-white/90">{username}</span>
+											<span className="text-sm text-white/90">{username.charAt(0).toUpperCase() + username.slice(1)}</span>
 											{userInfo.role !== 'reader' && (
 												<span className="ml-auto text-xs text-blue-300">
 													({userInfo.role})

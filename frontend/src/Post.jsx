@@ -59,7 +59,7 @@ export default function Post({
 								{displayCategory}
 							</Link>
 							<span className="text-xs font-medium text-cyan-400 tracking-tighter">
-								@{author?.username} - The Blogger
+								@{author?.username.charAt(0).toUpperCase() + author?.username.slice(1)} - The Blogger
 							</span>
 						{/* Added Read Time here for a professional look */}
 							<div className="flex items-center gap-1 text-[10px] font-mono text-cyan-500/60 tracking-widest mt-1">
@@ -109,7 +109,7 @@ export default function Post({
 
 					<div className="mt-6 flex items-center justify-between">
 					<span className="text-[12px] font-mono text-slate-300">
-						Posted By @{author?.username}
+						Posted By @{author?.username.charAt(0).toUpperCase() + author?.username.slice(1)}
 					</span>
 					<Link
 						to={`/post/${_id}`}

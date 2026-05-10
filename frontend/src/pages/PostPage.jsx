@@ -431,7 +431,7 @@ const PostPage = () => {
 						<div className="h-10 w-10 rounded-full bg-gradient-to-tr from-cyan-500 to-purple-600 shadow-lg" />
 						<div>
 							<p className="font-bold leading-none text-white">
-								@{postInfo?.author?.username || 'Anonymous'} - The Blogger
+								@{postInfo?.author?.username.charAt(0).toUpperCase() + postInfo?.author?.username.slice(1) || 'Anonymous'} - The Blogger
 							</p>
 							<time className="text-xs text-slate-500">
 								{formatISO9075(new Date(postInfo.createdAt))}
@@ -638,7 +638,7 @@ const PostPage = () => {
 							/>
 							<div className="flex items-center justify-between gap-4">
 								<p className="text-sm text-slate-500">
-									Commenting as @{userInfo.username}
+									Commenting as @{userInfo.username.charAt(0).toUpperCase() + userInfo.username.slice(1)}
 								</p>
 								<button
 									type="submit"
@@ -685,7 +685,7 @@ const PostPage = () => {
 									<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 										<div>
 											<p className="font-semibold text-white">
-												@{comment.author?.username || 'Anonymous'}
+												@{comment.author?.username.charAt(0).toUpperCase() + comment.author?.username.slice(1) || 'Anonymous'}
 											</p>
 											<p className="mt-1 text-xs text-slate-500">
 												{formatISO9075(new Date(comment.createdAt))}
@@ -740,7 +740,7 @@ const PostPage = () => {
 												<textarea
 													value={replyText}
 													onChange={(event) => setReplyText(event.target.value)}
-													placeholder={`Reply to @${comment.author?.username || 'this comment'}...`}
+													placeholder={`Reply to @${comment.author?.username.charAt(0).toUpperCase() + comment.author?.username.slice(1) || 'this comment'}...`}
 													className="min-h-[100px] w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400"
 												/>
 												<div className="flex justify-end gap-3">
@@ -787,7 +787,7 @@ const PostPage = () => {
 															<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 																<div>
 																	<p className="font-semibold text-white">
-																		@{reply.author?.username || 'Anonymous'}
+																		@{reply.author?.username ? reply.author?.username.charAt(0).toUpperCase() + reply.author?.username.slice(1) : 'Anonymous'}
 																	</p>
 																	<p className="mt-1 text-xs text-slate-500">
 																		{formatISO9075(new Date(reply.createdAt))}

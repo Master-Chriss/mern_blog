@@ -786,7 +786,7 @@ const AdminDashboard = () => {
 											<div className="flex items-start justify-between gap-3">
 												<div className="min-w-0">
 													<p className="truncate text-base font-semibold text-white">
-														{user.username.chartAt(0).toUpperCase() + user.username.slice(1)}
+														{user.username.charAt(0).toUpperCase() + user.username.slice(1)}
 													</p>
 													<p className="mt-1 break-all text-sm text-slate-400">
 														{user.email}

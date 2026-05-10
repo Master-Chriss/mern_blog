@@ -650,7 +650,7 @@ const AdminDashboard = () => {
 											Admin Dashboard
 										</p>
 										<h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
-											Hello {userInfo.username}!
+											Hello {userInfo.username.charAt(0).toUpperCase() + userInfo.username.slice(1)}!
 										</h1>
 										<p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
 											Review platform activity, manage your team, and keep publishing

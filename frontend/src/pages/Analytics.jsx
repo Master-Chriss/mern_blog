@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ChartColumn, Menu } from 'lucide-react';
 import { UserContext } from '../UserContext';
+import { Loader } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 

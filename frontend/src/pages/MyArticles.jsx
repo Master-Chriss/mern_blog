@@ -7,7 +7,7 @@ import {
 	PenSquare,
 	Search,
 	Trash2,
-	X,
+	X, Loader
 } from 'lucide-react';
 import { UserContext } from '../UserContext';
 import ConfirmationDialog from '../components/ConfirmationDialog';
@@ -233,8 +233,9 @@ const MyArticles = () => {
 							</div>
 
 							{isLoading ? (
-								<div className="rounded-[1.35rem] bg-slate-900/40 px-4 py-8 text-center text-slate-400">
-									Loading articles...
+								<div className="flex justify-center items-center rounded-[1.35rem] bg-slate-900/40 px-4 py-8 text-center text-slate-400">
+									<Loader size={24} className="animate-spin text-slate-500" />
+									<p className="">Loading articles...</p>
 								</div>
 							) : paginatedPosts.length > 0 ? (
 								<div className="space-y-3">

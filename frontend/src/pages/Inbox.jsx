@@ -184,7 +184,7 @@ const Inbox = () => {
 															<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 																<div className="min-w-0">
 																	<p className="text-sm font-semibold text-white">
-																		{activity.author?.username || 'A reader'}{' '}
+																		{activity.author?.username.charAt(0)?.toUpperCase() + activity.author?.username.slice(1) || 'A reader'}{' '}
 																		<span className="text-slate-400">
 																			left a {activity.type}
 																		</span>

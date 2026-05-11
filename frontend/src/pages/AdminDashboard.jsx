@@ -447,20 +447,20 @@ const AdminDashboard = () => {
 
 	const menuItems = [
 		{ icon: <Home size={18} />, label: 'Dashboard', path: '/admin' },
-		{ icon: <FileText size={18} />, label: 'My Articles', path: '/admin#articles' },
-		{ icon: <Mail size={18} />, label: 'Inbox', path: '/admin#inbox' },
+		{ icon: <FileText size={18} />, label: 'My Articles', path: '/admin/articles' },
+		{ icon: <Mail size={18} />, label: 'Inbox', path: '/admin/inbox' },
 		{
 			icon: <ChartColumn size={18} />,
 			label: 'Analytics',
-			path: '/admin#analytics',
+			path: '/admin/analytics',
 		},
 		{
 			icon: <CalendarDays size={18} />,
 			label: 'Post Plan',
-			path: '/admin#plan',
+			path: '/admin/plan',
 		},
-		{ icon: <Wallet size={18} />, label: 'Earnings', path: '/admin#earnings' },
-		{ icon: <Settings size={18} />, label: 'Settings', path: '/admin#settings' },
+		{ icon: <Wallet size={18} />, label: 'Earnings', path: '/admin/earnings' },
+		{ icon: <Settings size={18} />, label: 'Settings', path: '/admin/settings' },
 	];
 
 	const updateUserRole = async (userId, newRole) => {
@@ -724,7 +724,7 @@ const AdminDashboard = () => {
 															{post.title}
 														</h3>
 														<p className="mt-1 text-sm text-slate-400">
-															@{post.author?.username || 'unknown'} •{' '}
+															@{post.author?.username.charAt(0) + post.author?.username.slice(1) || 'unknown'} •{' '}
 															{formatDisplayDate(post.createdAt)}
 														</p>
 													</div>
@@ -752,6 +752,13 @@ const AdminDashboard = () => {
 											No posts are available yet.
 										</div>
 									)}
+								</div>
+								<div className="mt-4 text-center">
+									<Link
+										to="/admin/articles"
+										className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300 transition hover:bg-cyan-500/30">
+										View All Articles →
+									</Link>
 								</div>
 							</div>
 

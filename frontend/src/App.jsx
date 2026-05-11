@@ -20,6 +20,13 @@ import ContactPage from './pages/ContactPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 
+import MyArticles from './pages/MyArticles';
+import Inbox from './pages/Inbox';
+import Analytics from './pages/Analytics';
+import PostPlan from './pages/PostPlan';
+import Earnings from './pages/Earnings';
+import Settings from './pages/Settings';
+
 /**
  * AppRoutes Component
  * This component is separate so it can sit INSIDE the UserContextProvider.
@@ -61,9 +68,9 @@ const AppRoutes = () => {
 					}
 				/>
 
-					<Route path="/post/:id" element={<PostPage />} />
-					<Route path="/:type(category|tag)/:slug" element={<ArchivePage />} />
-					<Route path="/edit/:id" element={<EditPage />} />
+				<Route path="/post/:id" element={<PostPage />} />
+				<Route path="/:type(category|tag)/:slug" element={<ArchivePage />} />
+				<Route path="/edit/:id" element={<EditPage />} />
 				<Route
 					path="/author"
 					element={
@@ -84,6 +91,13 @@ const AppRoutes = () => {
 						)
 					}
 				/>
+				<Route path="/admin/articles" element={userInfo?.role === 'admin' ? <MyArticles /> : <Navigate to="/" />} />
+				<Route path="/admin/inbox" element={userInfo?.role === 'admin' ? <Inbox /> : <Navigate to="/" />} />
+				<Route path="/admin/analytics" element={userInfo?.role === 'admin' ? <Analytics /> : <Navigate to="/" />} />
+				<Route path="/admin/plan" element={userInfo?.role === 'admin' ? <PostPlan /> : <Navigate to="/" />} />
+				<Route path="/admin/earnings" element={userInfo?.role === 'admin' ? <Earnings /> : <Navigate to="/" />} />
+				<Route path="/admin/settings" element={userInfo?.role === 'admin' ? <Settings /> : <Navigate to="/" />} />
+
 				<Route path="/about" element={<AboutPage />} />
 				<Route path="/contact" element={<ContactPage />} />
 				<Route path="/privacy" element={<PrivacyPolicyPage />} />

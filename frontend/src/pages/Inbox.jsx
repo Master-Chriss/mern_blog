@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Mail, Menu, X } from 'lucide-react';
+import { Mail, Menu, X, Loader } from 'lucide-react';
 import { UserContext } from '../UserContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
@@ -123,7 +123,8 @@ const Inbox = () => {
 										Inbox
 									</h1>
 									<p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-										Monitor reader comments, engagement, and audience interactions across your posts.
+										Monitor reader comments, engagement, and audience
+										interactions across your posts.
 									</p>
 								</div>
 							</div>
@@ -131,8 +132,9 @@ const Inbox = () => {
 
 						<section className="mt-6 rounded-[2rem] bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
 							{isLoading ? (
-								<div className="rounded-[1.35rem] bg-slate-900/40 px-4 py-8 text-center text-slate-400">
-									Loading inbox data...
+								<div className="flex justify-center items-center gap-3 rounded-[1.35rem] bg-slate-900/40 px-4 py-8 text-center text-slate-400">
+									<Loader size={24} className="animate-spin text-slate-500" />
+									<p>Loading inbox data...</p>
 								</div>
 							) : (
 								<div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -174,7 +176,9 @@ const Inbox = () => {
 										</div>
 
 										<div className="mt-6">
-											<h2 className="mb-4 text-xl font-bold text-white">Recent Activity</h2>
+											<h2 className="mb-4 text-xl font-bold text-white">
+												Recent Activity
+											</h2>
 											<div className="space-y-3">
 												{inboxData.activities.length > 0 ? (
 													inboxData.activities.map((activity) => (
@@ -184,7 +188,11 @@ const Inbox = () => {
 															<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 																<div className="min-w-0">
 																	<p className="text-sm font-semibold text-white">
-																		{activity.author?.username.charAt(0)?.toUpperCase() + activity.author?.username.slice(1) || 'A reader'}{' '}
+																		{activity.author?.username
+																			.charAt(0)
+																			?.toUpperCase() +
+																			activity.author?.username.slice(1) ||
+																			'A reader'}{' '}
 																		<span className="text-slate-400">
 																			left a {activity.type}
 																		</span>
@@ -212,7 +220,8 @@ const Inbox = () => {
 													))
 												) : (
 													<div className="rounded-[1.35rem] bg-slate-900/40 p-4 text-sm leading-6 text-slate-400">
-														No reader activity yet. Fresh comment activity will surface here.
+														No reader activity yet. Fresh comment activity will
+														surface here.
 													</div>
 												)}
 											</div>
@@ -221,16 +230,21 @@ const Inbox = () => {
 
 									<div className="space-y-3">
 										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<p className="text-sm font-semibold text-white">Engagement Insights</p>
+											<p className="text-sm font-semibold text-white">
+												Engagement Insights
+											</p>
 											<p className="mt-2 text-sm leading-6 text-slate-400">
-												Real-time reader engagement metrics and interaction patterns.
+												Real-time reader engagement metrics and interaction
+												patterns.
 											</p>
 										</div>
 										{inboxReminders.map((item) => (
 											<div
 												key={item.title}
 												className="rounded-[1.35rem] bg-slate-900/40 p-4">
-												<p className="text-sm font-semibold text-white">{item.title}</p>
+												<p className="text-sm font-semibold text-white">
+													{item.title}
+												</p>
 												<p className="mt-2 text-sm leading-6 text-slate-400">
 													{item.description}
 												</p>

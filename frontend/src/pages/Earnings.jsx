@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Wallet, Menu } from 'lucide-react';
+import { Wallet, Menu, Loader } from 'lucide-react';
 import { UserContext } from '../UserContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
@@ -109,7 +109,7 @@ const Earnings = () => {
 				totalSubscribers < 50
 					? 'Focus on growing your subscriber base. Aim for at least 50 active subscribers before testing monetization.'
 					: totalSubscribers < 100
-						? 'You\'re on the right track! Continue growing your audience to unlock more monetization opportunities.'
+						? "You're on the right track! Continue growing your audience to unlock more monetization opportunities."
 						: 'Your audience is large enough to test multiple monetization strategies.',
 		},
 		{
@@ -159,7 +159,8 @@ const Earnings = () => {
 										Earnings
 									</h1>
 									<p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-										Monetization readiness signals from your audience and content supply.
+										Monetization readiness signals from your audience and
+										content supply.
 									</p>
 								</div>
 							</div>
@@ -167,8 +168,9 @@ const Earnings = () => {
 
 						<section className="mt-6 rounded-[2rem] bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
 							{isLoading ? (
-								<div className="rounded-[1.35rem] bg-slate-900/40 px-4 py-8 text-center text-slate-400">
-									Loading earnings data...
+								<div className="flex justify-center items-center gap-3 rounded-[1.35rem] bg-slate-900/40 px-4 py-8 text-center text-slate-400">
+									<Loader size={24} className="animate-spin text-slate-500" />
+									<p>Loading earnings data...</p>
 								</div>
 							) : (
 								<div className="space-y-6">
@@ -186,7 +188,9 @@ const Earnings = () => {
 												<p className="mt-3 text-lg font-semibold text-white">
 													{metric.value}
 												</p>
-												<p className="mt-1 text-sm text-slate-400">{metric.detail}</p>
+												<p className="mt-1 text-sm text-slate-400">
+													{metric.detail}
+												</p>
 											</div>
 										))}
 									</div>
@@ -206,16 +210,15 @@ const Earnings = () => {
 													{totalSubscribers >= 100
 														? 'Your audience is large enough to start testing sponsor, premium, or newsletter monetization experiments.'
 														: totalSubscribers >= 50
-															? 'You\'re approaching the threshold for meaningful monetization. Keep growing your audience.'
+															? "You're approaching the threshold for meaningful monetization. Keep growing your audience."
 															: 'Focus on building your audience and publishing consistently before monetization.'}
 												</p>
 											</div>
 											<div
 												className={`flex-shrink-0 rounded-full bg-${readinessColor}-500/20 px-4 py-2 text-center`}>
-												<p className={`text-2xl font-bold text-${readinessColor}-300`}>
-													{Math.round(
-														(totalSubscribers / 100) * 100,
-													)}%
+												<p
+													className={`text-2xl font-bold text-${readinessColor}-300`}>
+													{Math.round((totalSubscribers / 100) * 100)}%
 												</p>
 												<p className="text-xs text-slate-400">of target</p>
 											</div>
@@ -223,12 +226,16 @@ const Earnings = () => {
 									</div>
 
 									<div className="space-y-3">
-										<h2 className="text-xl font-bold text-white">Recommendations</h2>
+										<h2 className="text-xl font-bold text-white">
+											Recommendations
+										</h2>
 										{recommendations.map((rec) => (
 											<div
 												key={rec.title}
 												className="rounded-[1.35rem] bg-slate-900/40 p-4">
-												<p className="text-sm font-semibold text-white">{rec.title}</p>
+												<p className="text-sm font-semibold text-white">
+													{rec.title}
+												</p>
 												<p className="mt-2 text-sm leading-6 text-slate-300">
 													{rec.description}
 												</p>

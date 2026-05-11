@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Settings, Menu, Trash2, Search } from 'lucide-react';
+import { Settings, Menu, Trash2, Search, Loader } from 'lucide-react';
 import { UserContext } from '../UserContext';
 import ConfirmationDialog from '../components/ConfirmationDialog';
 
@@ -209,9 +209,18 @@ const SettingsPage = () => {
 										Role Distribution
 									</p>
 									<p className="mt-3 text-sm text-white">
-										<span className="font-bold text-violet-300">{totalAdmins}</span> admins,{' '}
-										<span className="font-bold text-emerald-300">{totalAuthors}</span> authors,{' '}
-										<span className="font-bold text-amber-300">{totalReaders}</span> readers
+										<span className="font-bold text-violet-300">
+											{totalAdmins}
+										</span>{' '}
+										admins,{' '}
+										<span className="font-bold text-emerald-300">
+											{totalAuthors}
+										</span>{' '}
+										authors,{' '}
+										<span className="font-bold text-amber-300">
+											{totalReaders}
+										</span>{' '}
+										readers
 									</p>
 									<p className="mt-1 text-sm text-slate-400">
 										Current access levels
@@ -233,7 +242,9 @@ const SettingsPage = () => {
 							<div className="mt-6 space-y-4">
 								<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 									<div>
-										<h2 className="text-xl font-bold text-white">Manage Users</h2>
+										<h2 className="text-xl font-bold text-white">
+											Manage Users
+										</h2>
 										<p className="mt-1 text-sm text-slate-400">
 											Update roles and remove accounts
 										</p>
@@ -258,8 +269,9 @@ const SettingsPage = () => {
 								</div>
 
 								{isLoading ? (
-									<div className="rounded-[1.35rem] bg-slate-900/40 px-4 py-8 text-center text-slate-400">
-										Loading users...
+									<div className="flex justify-center items-center gap-3 rounded-[1.35rem] bg-slate-900/40 px-4 py-8 text-center text-slate-400">
+										<Loader size={24} className="animate-spin text-slate-500" />
+										<p>Loading users...</p>
 									</div>
 								) : paginatedUsers.length > 0 ? (
 									<div className="space-y-3">
@@ -339,7 +351,7 @@ const SettingsPage = () => {
 											type="button"
 											onClick={() =>
 												setCurrentPage((prev) =>
-													Math.min(prev + 1, totalPages || 1)
+													Math.min(prev + 1, totalPages || 1),
 												)
 											}
 											disabled={currentPage === totalPages || totalPages === 0}

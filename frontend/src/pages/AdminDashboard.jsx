@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
+﻿import { useContext, useEffect, useMemo, useState } from 'react';
 import { Navigate, Link, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -244,6 +244,16 @@ const AdminDashboard = () => {
 	const weekStart = new Date(now);
 	weekStart.setDate(now.getDate() - 7);
 
+	const prevWeekStart = new Date(now);
+	prevWeekStart.setDate(now.getDate() - 14);
+	const prevWeekEnd = new Date(now);
+	prevWeekEnd.setDate(now.getDate() - 7);
+
+	const prevWeekPosts = posts.filter((post) => {
+		const postDate = new Date(post.createdAt);
+		return postDate >= prevWeekStart && postDate < prevWeekEnd;
+	}).length;
+
 	const recentPosts = posts.slice(0, 4);
 	const thisMonthPosts = posts.filter(
 		(post) => new Date(post.createdAt) >= monthStart,
@@ -251,7 +261,9 @@ const AdminDashboard = () => {
 	const thisWeekPosts = posts.filter(
 		(post) => new Date(post.createdAt) >= weekStart,
 	).length;
-	const postsWithoutTags = posts.filter((post) => (post.tags || []).length === 0).length;
+	const postsWithoutTags = posts.filter(
+		(post) => (post.tags || []).length === 0,
+	).length;
 	const postsWithoutCategory = posts.filter((post) => !post.category).length;
 
 	const categoryBreakdown = Object.entries(
@@ -447,7 +459,11 @@ const AdminDashboard = () => {
 
 	const menuItems = [
 		{ icon: <Home size={18} />, label: 'Dashboard', path: '/admin' },
-		{ icon: <FileText size={18} />, label: 'My Articles', path: '/admin/articles' },
+		{
+			icon: <FileText size={18} />,
+			label: 'My Articles',
+			path: '/admin/articles',
+		},
 		{ icon: <Mail size={18} />, label: 'Inbox', path: '/admin/inbox' },
 		{
 			icon: <ChartColumn size={18} />,
@@ -460,7 +476,11 @@ const AdminDashboard = () => {
 			path: '/admin/plan',
 		},
 		{ icon: <Wallet size={18} />, label: 'Earnings', path: '/admin/earnings' },
-		{ icon: <Settings size={18} />, label: 'Settings', path: '/admin/settings' },
+		{
+			icon: <Settings size={18} />,
+			label: 'Settings',
+			path: '/admin/settings',
+		},
 	];
 
 	const updateUserRole = async (userId, newRole) => {
@@ -650,18 +670,23 @@ const AdminDashboard = () => {
 											Admin Dashboard
 										</p>
 										<h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
-											Hello {userInfo.username.charAt(0).toUpperCase() + userInfo.username.slice(1)}!
+											Hello{' '}
+											{userInfo.username.charAt(0).toUpperCase() +
+												userInfo.username.slice(1)}
+											!
 										</h1>
 										<p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-											Review platform activity, manage your team, and keep publishing
-											moving smoothly from one operational workspace.
+											Review platform activity, manage your team, and keep
+											publishing moving smoothly from one operational workspace.
 										</p>
 									</div>
 								</div>
 
 								<div className="flex flex-col gap-3 sm:flex-row">
 									<div className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-300">
-										<span className="font-semibold text-white">{totalUsers}</span>{' '}
+										<span className="font-semibold text-white">
+											{totalUsers}
+										</span>{' '}
 										registered users
 									</div>
 									<Link
@@ -686,11 +711,122 @@ const AdminDashboard = () => {
 										</span>
 										<p>{card.label}</p>
 									</div>
-									<p className={`mt-5 text-3xl font-bold sm:text-4xl ${card.valueClassName}`}>
+									<p
+										className={`mt-5 text-3xl font-bold sm:text-4xl ${card.valueClassName}`}>
 										{card.value}
 									</p>
 								</div>
 							))}
+						</section>
+
+						<section className="mt-6 rounded-[2rem] bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
+							<div className="mb-6">
+								<h2 className="text-2xl font-bold text-white">
+									Content Performance Trends
+								</h2>
+								<p className="mt-2 text-sm text-slate-400">
+									Publishing momentum and platform activity pace.
+								</p>
+							</div>
+
+							<div className="grid gap-6 md:grid-cols-2">
+								{/* Week-over-Week Comparison */}
+								<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+									<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+										This Week vs Last Week
+									</p>
+									<div className="mt-4 space-y-4">
+										<div>
+											<div className="flex items-center justify-between gap-3 mb-2">
+												<p className="text-sm text-slate-300">This Week</p>
+												<p className="text-lg font-bold text-cyan-300">
+													{thisWeekPosts}
+												</p>
+											</div>
+											<div className="h-2 rounded-full bg-white/5">
+												<div
+													className="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500"
+													style={{
+														width: `${Math.max(20, Math.min(100, (thisWeekPosts / Math.max(thisWeekPosts, prevWeekPosts, 5)) * 100))}%`,
+													}}
+												/>
+											</div>
+										</div>
+										<div>
+											<div className="flex items-center justify-between gap-3 mb-2">
+												<p className="text-sm text-slate-300">Last Week</p>
+												<p className="text-lg font-bold text-emerald-300">
+													{prevWeekPosts}
+												</p>
+											</div>
+											<div className="h-2 rounded-full bg-white/5">
+												<div
+													className="h-2 rounded-full bg-gradient-to-r from-emerald-500 to-green-500"
+													style={{
+														width: `${Math.max(20, Math.min(100, (prevWeekPosts / Math.max(thisWeekPosts, prevWeekPosts, 5)) * 100))}%`,
+													}}
+												/>
+											</div>
+										</div>
+									</div>
+									<div className="mt-4 pt-4 border-t border-white/10">
+										<div className="flex items-center justify-between gap-3">
+											<p className="text-sm text-slate-400">Momentum</p>
+											{thisWeekPosts > prevWeekPosts ? (
+												<div className="flex items-center gap-2">
+													<span className="text-sm font-semibold text-green-400">
+														+{thisWeekPosts - prevWeekPosts}
+													</span>
+													<span className="text-green-400">↑</span>
+												</div>
+											) : thisWeekPosts < prevWeekPosts ? (
+												<div className="flex items-center gap-2">
+													<span className="text-sm font-semibold text-red-400">
+														-{prevWeekPosts - thisWeekPosts}
+													</span>
+													<span className="text-red-400">↓</span>
+												</div>
+											) : (
+												<div className="flex items-center gap-2">
+													<span className="text-sm font-semibold text-slate-400">
+														Flat
+													</span>
+													<span className="text-slate-400">→</span>
+												</div>
+											)}
+										</div>
+									</div>
+								</div>
+
+								{/* Monthly Activity Pace */}
+								<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
+									<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+										Activity Pace (Last 4 Months)
+									</p>
+									<div className="mt-4 flex items-end justify-center gap-3 h-32">
+										{monthlyBreakdown.map((item) => (
+											<div
+												key={item.label}
+												className="flex flex-col items-center gap-2 flex-1">
+												<div className="flex h-24 w-full items-end justify-center rounded-lg bg-white/5 px-1 pb-2">
+													<div
+														className="w-full rounded-md bg-gradient-to-t from-cyan-500 to-purple-500 transition-all"
+														style={{
+															height: `${Math.max(8, (item.count / busiestMonthCount) * 88)}px`,
+														}}
+													/>
+												</div>
+												<p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+													{item.label}
+												</p>
+												<p className="text-sm font-bold text-white">
+													{item.count}
+												</p>
+											</div>
+										))}
+									</div>
+								</div>
+							</div>
 						</section>
 
 						<section className="mt-6 space-y-6">
@@ -699,13 +835,15 @@ const AdminDashboard = () => {
 								className="rounded-[2rem] bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
 								<div className="mb-6 flex items-end justify-between gap-4">
 									<div>
-										<h2 className="text-2xl font-bold text-white">Top Articles</h2>
+										<h2 className="text-2xl font-bold text-white">
+											Top Articles
+										</h2>
 										<p className="mt-2 text-sm text-slate-400">
 											Latest published stories with quick moderation actions.
 										</p>
 									</div>
 									<p className="text-sm text-slate-500">
-										{Math.min(posts.length, 4)} shown
+										{Math.min(posts.length, 5)} shown
 									</p>
 								</div>
 
@@ -724,8 +862,11 @@ const AdminDashboard = () => {
 															{post.title}
 														</h3>
 														<p className="mt-1 text-sm text-slate-400">
-															@{post.author?.username.charAt(0) + post.author?.username.slice(1) || 'unknown'} •{' '}
-															{formatDisplayDate(post.createdAt)}
+															@
+															{post.author?.username.charAt(0) +
+																post.author?.username.slice(1) ||
+																'unknown'}{' '}
+															• {formatDisplayDate(post.createdAt)}
 														</p>
 													</div>
 												</div>
@@ -759,520 +900,6 @@ const AdminDashboard = () => {
 										className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300 transition hover:bg-cyan-500/30">
 										View All Articles →
 									</Link>
-								</div>
-							</div>
-
-							<div className="rounded-[2rem] bg-white/5 shadow-xl shadow-black/10 backdrop-blur-xl">
-								<div className="flex flex-col gap-4 p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
-									<div>
-										<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
-											<UserCog size={24} /> Manage Users
-										</h2>
-										<p className="mt-2 text-sm text-slate-400">
-											Search members, update access levels, and remove accounts.
-										</p>
-									</div>
-
-									<input
-										type="search"
-										value={search}
-										onChange={(e) => {
-											setSearch(e.target.value);
-											setCurrentPage(1);
-										}}
-										placeholder="Search by username or email"
-										className="w-full rounded-2xl bg-slate-950/50 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none lg:max-w-sm"
-									/>
-								</div>
-
-								<div className="space-y-3 px-4 pb-4 sm:px-6 sm:pb-6 md:hidden">
-									{paginatedUsers.map((user) => (
-										<div
-											key={user._id}
-											className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<div className="flex items-start justify-between gap-3">
-												<div className="min-w-0">
-													<p className="truncate text-base font-semibold text-white">
-														{user.username.charAt(0).toUpperCase() + user.username.slice(1)}
-													</p>
-													<p className="mt-1 break-all text-sm text-slate-400">
-														{user.email}
-													</p>
-												</div>
-												<button
-													onClick={() => openDeleteUserConfirm(user)}
-													className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-red-500/15 text-red-300">
-													<Trash2 size={16} />
-												</button>
-											</div>
-
-											<div className="mt-4 grid gap-3 sm:grid-cols-2">
-												<div className="rounded-2xl bg-white/5 p-3">
-													<p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-														Role
-													</p>
-													<select
-														value={user.role}
-														onChange={(e) => updateUserRole(user._id, e.target.value)}
-														className="mt-2 w-full rounded-xl bg-slate-950/60 px-3 py-2 text-sm text-white">
-														<option value="reader">Reader</option>
-														<option value="author">Author</option>
-														<option value="admin">Admin</option>
-													</select>
-												</div>
-
-												<div className="rounded-2xl bg-white/5 p-3">
-													<p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-														Joined
-													</p>
-													<p className="mt-3 text-sm text-slate-300">
-														{formatDisplayDate(user.createdAt)}
-													</p>
-												</div>
-											</div>
-										</div>
-									))}
-								</div>
-
-								<div className="hidden overflow-x-auto md:block">
-									<table className="w-full min-w-[720px]">
-										<thead>
-											<tr className="text-left text-sm text-slate-400">
-												<th className="px-6 py-4">Username</th>
-												<th className="px-6 py-4">Email</th>
-												<th className="px-6 py-4">Role</th>
-												<th className="px-6 py-4">Joined</th>
-												<th className="px-6 py-4">Actions</th>
-											</tr>
-										</thead>
-										<tbody>
-											{paginatedUsers.map((user) => (
-												<tr
-													key={user._id}
-													className="text-sm text-slate-300 transition hover:bg-white/5">
-													<td className="px-6 py-4 font-medium text-white">
-														{user.username}
-													</td>
-													<td className="px-6 py-4">{user.email}</td>
-													<td className="px-6 py-4">
-														<select
-															value={user.role}
-															onChange={(e) => updateUserRole(user._id, e.target.value)}
-															className="rounded-xl bg-slate-950/60 px-3 py-2 text-sm text-white">
-															<option value="reader">Reader</option>
-															<option value="author">Author</option>
-															<option value="admin">Admin</option>
-														</select>
-													</td>
-													<td className="px-6 py-4 text-slate-400">
-														{formatDisplayDate(user.createdAt)}
-													</td>
-													<td className="px-6 py-4">
-														<button
-															onClick={() => openDeleteUserConfirm(user)}
-															className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-red-500/15 text-red-300 transition hover:bg-red-500/25">
-															<Trash2 size={16} />
-														</button>
-													</td>
-												</tr>
-											))}
-										</tbody>
-									</table>
-								</div>
-
-								<div className="flex flex-col gap-4 px-4 pb-4 pt-2 text-sm text-slate-400 sm:px-6 sm:pb-6 lg:flex-row lg:items-center lg:justify-between">
-									<p>
-										Showing {paginatedUsers.length} of {filteredUsers.length} users
-									</p>
-
-									<div className="flex flex-wrap gap-2">
-										<button
-											type="button"
-											onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-											disabled={currentPage === 1}
-											className="rounded-xl bg-white/5 px-3 py-2 text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-40">
-											Previous
-										</button>
-										{Array.from({ length: totalPages }, (_, index) => {
-											const page = index + 1;
-											return (
-												<button
-													key={page}
-													type="button"
-													onClick={() => setCurrentPage(page)}
-													className={`rounded-xl px-3 py-2 transition ${
-														currentPage === page
-															? 'bg-cyan-500/20 text-cyan-300'
-															: 'bg-white/5 text-slate-200'
-													}`}>
-													{page}
-												</button>
-											);
-										})}
-										<button
-											type="button"
-											onClick={() =>
-												setCurrentPage((prev) => Math.min(prev + 1, totalPages || 1))
-											}
-											disabled={currentPage === totalPages || totalPages === 0}
-											className="rounded-xl bg-white/5 px-3 py-2 text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-40">
-											Next
-										</button>
-									</div>
-								</div>
-							</div>
-
-							<div
-								id="inbox"
-								className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
-								<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
-									<Mail size={24} /> Inbox
-								</h2>
-								<p className="mt-2 text-sm text-slate-400">
-									Live platform activity from reader comments and audience growth.
-								</p>
-								<div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-									<div>
-										<div className="grid gap-3 sm:grid-cols-3">
-											<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-												<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
-													Reader Messages
-												</p>
-												<p className="mt-3 text-2xl font-bold text-cyan-300">
-													{inboxData.summary.totalReaderMessages}
-												</p>
-												<p className="mt-1 text-sm text-slate-400">
-													Across all published posts
-												</p>
-											</div>
-											<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-												<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
-													Last 7 Days
-												</p>
-												<p className="mt-3 text-2xl font-bold text-emerald-300">
-													{inboxData.summary.recentReaderMessages}
-												</p>
-												<p className="mt-1 text-sm text-slate-400">
-													New comments and replies
-												</p>
-											</div>
-											<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-												<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
-													Active Discussions
-												</p>
-												<p className="mt-3 text-2xl font-bold text-violet-300">
-													{inboxData.summary.activePosts}
-												</p>
-												<p className="mt-1 text-sm text-slate-400">
-													{inboxData.summary.uniqueReaders} unique readers involved
-												</p>
-											</div>
-										</div>
-
-										<div className="mt-4 space-y-3">
-											{inboxData.activities.length > 0 ? (
-												inboxData.activities.map((activity) => (
-													<div
-														key={activity._id}
-														className="rounded-[1.35rem] bg-slate-900/40 p-4">
-														<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-															<div className="min-w-0">
-																<p className="text-sm font-semibold text-white">
-																	{activity.author?.username || 'A reader'}{' '}
-																	<span className="text-slate-400">
-																		left a {activity.type}
-																	</span>
-																</p>
-																<p className="mt-1 text-sm text-cyan-200">
-																	on{' '}
-																	<Link
-																		to={`/post/${activity.post?._id}`}
-																		className="hover:underline">
-																		{activity.post?.title || 'a post'}
-																	</Link>{' '}
-																	<span className="text-slate-400">
-																		by @{activity.post?.author || 'unknown'}
-																	</span>
-																</p>
-															</div>
-															<p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-																{formatRelativeTime(activity.createdAt)}
-															</p>
-														</div>
-														<p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-300">
-															{activity.content}
-														</p>
-													</div>
-												))
-											) : (
-												<div className="rounded-[1.35rem] bg-slate-900/40 p-4 text-sm leading-6 text-slate-400">
-													No reader activity yet. Fresh comment activity will surface here.
-												</div>
-											)}
-										</div>
-									</div>
-
-									<div className="space-y-3">
-										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<p className="text-sm font-semibold text-white">
-												Operational Notes
-											</p>
-											<p className="mt-2 text-sm leading-6 text-slate-400">
-												Quick admin prompts grounded in current publishing and audience data.
-											</p>
-										</div>
-										{inboxReminders.map((item) => (
-											<div
-												key={item.title}
-												className="rounded-[1.35rem] bg-slate-900/40 p-4">
-												<p className="text-sm font-semibold text-white">{item.title}</p>
-												<p className="mt-2 text-sm leading-6 text-slate-400">
-													{item.description}
-												</p>
-											</div>
-										))}
-									</div>
-								</div>
-							</div>
-
-							<div
-								id="analytics"
-								className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
-								<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
-									<ChartColumn size={24} /> Analytics
-								</h2>
-								<p className="mt-2 text-sm text-slate-400">
-									Platform-wide content, audience, and author signals.
-								</p>
-								<div className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-									<div className="space-y-3">
-										<div className="grid gap-3 sm:grid-cols-3">
-											<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-												<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
-													Dominant Category
-												</p>
-												<p className="mt-3 text-lg font-semibold text-white">
-													{dominantCategory?.[0] || 'No data'}
-												</p>
-												<p className="mt-1 text-sm text-slate-400">
-													{dominantCategory
-														? `${dominantCategoryShare}% of posts`
-														: 'Publish to unlock'}
-												</p>
-											</div>
-											<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-												<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
-													Readers per Author
-												</p>
-												<p className="mt-3 text-lg font-semibold text-white">
-													{readersPerAuthor}
-												</p>
-												<p className="mt-1 text-sm text-slate-400">
-													Based on current role mix
-												</p>
-											</div>
-											<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-												<p className="text-xs uppercase tracking-[0.22em] text-slate-500">
-													Subscriber Reach
-												</p>
-												<p className="mt-3 text-lg font-semibold text-white">
-													{subscriberConversion}%
-												</p>
-												<p className="mt-1 text-sm text-slate-400">
-													Users in newsletter funnel
-												</p>
-											</div>
-										</div>
-
-										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<div className="flex items-center justify-between gap-4">
-												<p className="text-sm font-semibold text-white">
-													Category Breakdown
-												</p>
-												<p className="text-sm text-slate-500">{posts.length} total posts</p>
-											</div>
-											<div className="mt-4 space-y-3">
-												{categoryBreakdown.length > 0 ? (
-													categoryBreakdown.slice(0, 5).map(([category, count]) => (
-														<div key={category}>
-															<div className="flex items-center justify-between gap-4">
-																<p className="text-sm text-white">{category}</p>
-																<p className="text-sm text-cyan-300">{count}</p>
-															</div>
-															<div className="mt-2 h-2 rounded-full bg-white/5">
-																<div
-																	className="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500"
-																	style={{
-																		width: `${Math.max(
-																			16,
-																			(count / Math.max(posts.length, 1)) * 100,
-																		)}%`,
-																	}}
-																/>
-															</div>
-														</div>
-													))
-												) : (
-													<p className="text-sm text-slate-400">
-														Publishing analytics will appear once posts exist.
-													</p>
-												)}
-											</div>
-										</div>
-									</div>
-
-									<div className="space-y-3">
-										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<p className="text-sm font-semibold text-white">Publishing Rhythm</p>
-											<div className="mt-4 grid grid-cols-4 gap-3">
-												{monthlyBreakdown.map((item) => (
-													<div key={item.label} className="text-center">
-														<div className="flex h-28 items-end justify-center rounded-2xl bg-white/5 px-2 pb-3">
-															<div
-																className="w-full rounded-xl bg-gradient-to-t from-cyan-500 to-purple-500"
-																style={{
-																	height: `${Math.max(
-																		14,
-																		(item.count / busiestMonthCount) * 88,
-																	)}px`,
-																}}
-															/>
-														</div>
-														<p className="mt-3 text-xs uppercase tracking-[0.18em] text-slate-500">
-															{item.label}
-														</p>
-														<p className="mt-1 text-sm text-white">{item.count}</p>
-													</div>
-												))}
-											</div>
-										</div>
-
-										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<p className="text-sm font-semibold text-white">Top Authors</p>
-											<div className="mt-4 space-y-3">
-												{authorBreakdown.length > 0 ? (
-													authorBreakdown.map(([author, count]) => (
-														<div
-															key={author}
-															className="flex items-center justify-between gap-4">
-															<p className="text-sm text-white">@{author}</p>
-															<p className="text-sm text-cyan-300">{count} posts</p>
-														</div>
-													))
-												) : (
-													<p className="text-sm text-slate-400">
-														Author distribution will appear once posts exist.
-													</p>
-												)}
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-
-							<div className="grid gap-6 xl:grid-cols-2">
-								<div
-									id="plan"
-									className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
-									<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
-										<CalendarDays size={24} /> Post Plan
-									</h2>
-									<p className="mt-2 text-sm text-slate-400">
-										Operational next steps based on current publishing and team data.
-									</p>
-									<div className="mt-6 grid gap-3 sm:grid-cols-2">
-										{planItems.map((item) => (
-											<div
-												key={item.label}
-												className="rounded-[1.35rem] bg-slate-900/40 p-4">
-												<p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-													{item.label}
-												</p>
-												<p className="mt-3 text-sm leading-6 text-white">
-													{item.value}
-												</p>
-											</div>
-										))}
-									</div>
-								</div>
-
-								<div
-									id="earnings"
-									className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
-									<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
-										<Wallet size={24} /> Earnings
-									</h2>
-									<p className="mt-2 text-sm text-slate-400">
-										Real monetization-readiness signals from your audience and content supply.
-									</p>
-									<div className="mt-6 grid gap-3 sm:grid-cols-2">
-										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-												Audience Base
-											</p>
-											<p className="mt-3 text-lg font-semibold text-white">
-												{totalSubscribers} active subscribers
-											</p>
-											<p className="mt-2 text-sm leading-6 text-slate-400">
-												{newsletterStats.totalEmails} total captured emails on record.
-											</p>
-										</div>
-										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-												Content Supply
-											</p>
-											<p className="mt-3 text-lg font-semibold text-white">
-												{postsPerAuthor} posts per author
-											</p>
-											<p className="mt-2 text-sm leading-6 text-slate-400">
-												Average story output across current authors.
-											</p>
-										</div>
-										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-												Newsletter Conversion
-											</p>
-											<p className="mt-3 text-lg font-semibold text-white">
-												{subscriberConversion}%
-											</p>
-											<p className="mt-2 text-sm leading-6 text-slate-400">
-												Share of registered users currently in the newsletter funnel.
-											</p>
-										</div>
-										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-												Readiness Note
-											</p>
-											<p className="mt-3 text-sm leading-6 text-white">
-												{totalSubscribers >= 50
-													? 'Your audience is large enough to start testing sponsor, premium, or newsletter monetization experiments.'
-													: 'Keep growing subscribers and publishing consistency before expecting meaningful revenue experiments to convert.'}
-											</p>
-										</div>
-									</div>
-								</div>
-							</div>
-
-							<div
-								id="settings"
-								className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
-								<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
-									<Settings size={24} /> Settings
-								</h2>
-								<p className="mt-2 text-sm text-slate-400">
-									System health and governance notes based on the current platform state.
-								</p>
-								<div className="mt-6 grid gap-3 sm:grid-cols-3">
-									{settingsCards.map((card) => (
-										<div
-											key={card.title}
-											className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<p className="text-sm font-semibold text-white">{card.title}</p>
-											<p className="mt-2 text-sm leading-6 text-slate-400">
-												{card.description}
-											</p>
-										</div>
-									))}
 								</div>
 							</div>
 						</section>

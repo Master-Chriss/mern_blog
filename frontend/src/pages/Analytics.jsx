@@ -26,7 +26,8 @@ const Analytics = () => {
 					fetch(`${API_URL}/auth/users`, { credentials: 'include' }),
 				]);
 
-				if (!postsRes.ok || !usersRes.ok) throw new Error('Failed to load data');
+				if (!postsRes.ok || !usersRes.ok)
+					throw new Error('Failed to load data');
 
 				const postsData = await postsRes.json();
 				const usersData = await usersRes.json();
@@ -133,7 +134,8 @@ const Analytics = () => {
 										Analytics
 									</h1>
 									<p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-										Content performance, audience metrics, and author engagement data.
+										Content performance, audience metrics, and author engagement
+										data.
 									</p>
 								</div>
 							</div>
@@ -141,8 +143,9 @@ const Analytics = () => {
 
 						<section className="mt-6 rounded-[2rem] bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
 							{isLoading ? (
-								<div className="rounded-[1.35rem] bg-slate-900/40 px-4 py-8 text-center text-slate-400">
-									Loading analytics...
+								<div className="flex justify-center items-center gap-3 rounded-[1.35rem] bg-slate-900/40 px-4 py-8 text-center text-slate-400">
+									<Loader size={24} className="animate-spin text-slate-500" />
+									<p>Loading analytics...</p>
 								</div>
 							) : (
 								<div className="space-y-6 xl:grid xl:grid-cols-[1.15fr_0.85fr] xl:gap-6 xl:space-y-0">
@@ -190,29 +193,38 @@ const Analytics = () => {
 												<p className="text-sm font-semibold text-white">
 													Category Breakdown
 												</p>
-												<p className="text-sm text-slate-500">{posts.length} total posts</p>
+												<p className="text-sm text-slate-500">
+													{posts.length} total posts
+												</p>
 											</div>
 											<div className="mt-4 space-y-3">
 												{categoryBreakdown.length > 0 ? (
-													categoryBreakdown.slice(0, 5).map(([category, count]) => (
-														<div key={category}>
-															<div className="flex items-center justify-between gap-4">
-																<p className="text-sm text-white">{category}</p>
-																<p className="text-sm text-cyan-300">{count}</p>
+													categoryBreakdown
+														.slice(0, 5)
+														.map(([category, count]) => (
+															<div key={category}>
+																<div className="flex items-center justify-between gap-4">
+																	<p className="text-sm text-white">
+																		{category}
+																	</p>
+																	<p className="text-sm text-cyan-300">
+																		{count}
+																	</p>
+																</div>
+																<div className="mt-2 h-2 rounded-full bg-white/5">
+																	<div
+																		className="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500"
+																		style={{
+																			width: `${Math.max(
+																				16,
+																				(count / Math.max(posts.length, 1)) *
+																					100,
+																			)}%`,
+																		}}
+																	/>
+																</div>
 															</div>
-															<div className="mt-2 h-2 rounded-full bg-white/5">
-																<div
-																	className="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500"
-																	style={{
-																		width: `${Math.max(
-																			16,
-																			(count / Math.max(posts.length, 1)) * 100,
-																		)}%`,
-																	}}
-																/>
-															</div>
-														</div>
-													))
+														))
 												) : (
 													<p className="text-sm text-slate-400">
 														Publishing analytics will appear once posts exist.
@@ -224,7 +236,9 @@ const Analytics = () => {
 
 									<div className="space-y-3">
 										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<p className="text-sm font-semibold text-white">Publishing Rhythm</p>
+											<p className="text-sm font-semibold text-white">
+												Publishing Rhythm
+											</p>
 											<div className="mt-4 grid grid-cols-4 gap-3">
 												{monthlyBreakdown.map((item) => (
 													<div key={item.label} className="text-center">
@@ -242,14 +256,18 @@ const Analytics = () => {
 														<p className="mt-3 text-xs uppercase tracking-[0.18em] text-slate-500">
 															{item.label}
 														</p>
-														<p className="mt-1 text-sm text-white">{item.count}</p>
+														<p className="mt-1 text-sm text-white">
+															{item.count}
+														</p>
 													</div>
 												))}
 											</div>
 										</div>
 
 										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<p className="text-sm font-semibold text-white">Top Authors</p>
+											<p className="text-sm font-semibold text-white">
+												Top Authors
+											</p>
 											<div className="mt-4 space-y-3">
 												{authorBreakdown.length > 0 ? (
 													authorBreakdown.map(([author, count]) => (
@@ -257,7 +275,9 @@ const Analytics = () => {
 															key={author}
 															className="flex items-center justify-between gap-4">
 															<p className="text-sm text-white">@{author}</p>
-															<p className="text-sm text-cyan-300">{count} posts</p>
+															<p className="text-sm text-cyan-300">
+																{count} posts
+															</p>
 														</div>
 													))
 												) : (
@@ -269,16 +289,21 @@ const Analytics = () => {
 										</div>
 
 										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<p className="text-sm font-semibold text-white">Publishing Cadence</p>
+											<p className="text-sm font-semibold text-white">
+												Publishing Cadence
+											</p>
 											<div className="mt-4 space-y-2 text-sm text-slate-300">
 												<p>
-													<span className="text-slate-400">This week:</span> {thisWeekPosts} posts
+													<span className="text-slate-400">This week:</span>{' '}
+													{thisWeekPosts} posts
 												</p>
 												<p>
-													<span className="text-slate-400">This month:</span> {thisMonthPosts} posts
+													<span className="text-slate-400">This month:</span>{' '}
+													{thisMonthPosts} posts
 												</p>
 												<p>
-													<span className="text-slate-400">Total:</span> {posts.length} posts
+													<span className="text-slate-400">Total:</span>{' '}
+													{posts.length} posts
 												</p>
 											</div>
 										</div>

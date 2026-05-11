@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { CalendarDays, Menu } from 'lucide-react';
+import { CalendarDays, Menu, Loader } from 'lucide-react';
 import { UserContext } from '../UserContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
@@ -22,7 +22,8 @@ const PostPlan = () => {
 					fetch(`${API_URL}/auth/users`, { credentials: 'include' }),
 				]);
 
-				if (!postsRes.ok || !usersRes.ok) throw new Error('Failed to load data');
+				if (!postsRes.ok || !usersRes.ok)
+					throw new Error('Failed to load data');
 
 				const postsData = await postsRes.json();
 				const usersData = await usersRes.json();
@@ -52,8 +53,9 @@ const PostPlan = () => {
 		(post) => new Date(post.createdAt) >= monthStart,
 	).length;
 
-	const postsWithoutTags = posts.filter((post) => (post.tags || []).length === 0)
-		.length;
+	const postsWithoutTags = posts.filter(
+		(post) => (post.tags || []).length === 0,
+	).length;
 	const postsWithoutCategory = posts.filter((post) => !post.category).length;
 
 	const categoryBreakdown = Object.entries(
@@ -119,7 +121,8 @@ const PostPlan = () => {
 				postsWithoutTags > 0 || postsWithoutCategory > 0
 					? `${postsWithoutTags} posts need tags and ${postsWithoutCategory} posts need category assignment.`
 					: 'Your content metadata looks clean across categories and tags.',
-			status: postsWithoutTags > 0 || postsWithoutCategory > 0 ? 'warning' : 'good',
+			status:
+				postsWithoutTags > 0 || postsWithoutCategory > 0 ? 'warning' : 'good',
 		},
 		{
 			label: 'Author Activity',
@@ -162,7 +165,8 @@ const PostPlan = () => {
 										Post Plan
 									</h1>
 									<p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-										Strategic recommendations based on your current publishing and team data.
+										Strategic recommendations based on your current publishing
+										and team data.
 									</p>
 								</div>
 							</div>
@@ -170,8 +174,9 @@ const PostPlan = () => {
 
 						<section className="mt-6 rounded-[2rem] bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
 							{isLoading ? (
-								<div className="rounded-[1.35rem] bg-slate-900/40 px-4 py-8 text-center text-slate-400">
-									Loading plan data...
+								<div className="flex justify-center items-center gap-3 rounded-[1.35rem] bg-slate-900/40 px-4 py-8 text-center text-slate-400">
+									<Loader size={24} className="animate-spin text-slate-500" />
+									<p>Loading plan data...</p>
 								</div>
 							) : (
 								<div className="space-y-3">

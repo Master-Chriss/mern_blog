@@ -2,6 +2,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { Link, useLocation } from 'react-router-dom';
 import SmallSpinner from '../assets/smallSpinner/SmallSpinner';
+import { FaFacebook, FaTwitter, FaInstagram, FaYoutube, FaLinkedin } from 'react-icons/fa';
 
 const Footer = () => {
 	const [email, setEmail] = useState('');
@@ -34,12 +35,7 @@ const Footer = () => {
 				body: JSON.stringify({ email: email.trim() }),
 			});
 
-			console.log('✅ Response status:', response.status);
-			console.log('✅ Response ok:', response.ok);
-
 			const data = await response.json();
-
-			console.log('📦 Response data:', data);
 
 			if (!response.ok) {
 				console.error('❌ Error response:', data.message);
@@ -75,21 +71,42 @@ const Footer = () => {
 					{/* Brand */}
 					<div className="space-y-4">
 						<h3 className="text-2xl font-black bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
-							New Gen
+							New Gen Latest News
 						</h3>
 						<p className="text-slate-400 text-sm leading-relaxed">
 							Discover stories from curious minds sharing expertise in
 							technology, lifestyle, and innovation.
 						</p>
+						<p className="text-lg bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
+							Follow us on social media:
+						</p>
 						<div className="flex gap-3">
 							{[
-								{ icon: '𝕏', link: '#' },
-								{ icon: '👔', link: '#' },
-								{ icon: '🐙', link: '#' },
+								{
+									icon: <FaTwitter color="#1DA1F2" />,
+									link: 'https://twitter.com/newgenlatestnews',
+								},
+								{
+									icon: <FaFacebook color="#1877F2" />,
+									link: 'https://facebook.com/newgenlatestnews',
+								},
+								{
+									icon: <FaInstagram color="#E4405F" />,
+									link: 'https://instagram.com/newgenlatest',
+								},
+								{
+									icon: <FaLinkedin color="#0A66C2" />,
+									link: 'https://linkedin.com/company/newgenlatest',
+								},
+								{
+									icon: <FaYoutube color="#FF0000" />,
+									link: 'https://youtube.com/@newgenlatest',
+								},
 							].map((social, idx) => (
 								<a
 									key={idx}
 									href={social.link}
+									target="_blank"
 									className="w-10 h-10 rounded-lg bg-white/10 hover:bg-cyan-500/20 flex items-center justify-center transition-all text-lg"
 									aria-label={`Social media link ${idx + 1}`}>
 									{social.icon}
@@ -205,7 +222,7 @@ const Footer = () => {
 				<div className="border-t border-white/10 pt-8 space-y-4">
 					<div className="flex flex-col md:flex-row justify-between items-center gap-4">
 						<p className="text-slate-400 text-sm">
-							© {currentYear} New Gen. All rights reserved.
+							© {currentYear} New Gen Latest News. All rights reserved.
 						</p>
 						<p className="text-slate-500 text-sm">
 							Made with <span className="text-cyan-400">❤️</span> for the

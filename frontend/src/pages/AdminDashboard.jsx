@@ -298,6 +298,26 @@ const AdminDashboard = () => {
 		1,
 	);
 
+	const monthlyColorMap = (() => {
+		const sortedMonths = [...monthlyBreakdown].sort(
+			(a, b) => a.count - b.count,
+		);
+		const colorClasses = [
+			'bg-gradient-to-t from-red-500 to-red-400',
+			'bg-gradient-to-t from-orange-500 to-orange-400',
+			'bg-gradient-to-t from-yellow-500 to-yellow-400',
+			'bg-gradient-to-t from-emerald-500 to-green-400',
+		];
+
+		return monthlyBreakdown.reduce((map, item) => {
+			const rank = sortedMonths.findIndex(
+				(month) => month.label === item.label,
+			);
+			map[item.label] = colorClasses[Math.min(rank, colorClasses.length - 1)];
+			return map;
+		}, {});
+	})();
+
 	const authorBreakdown = Object.entries(
 		posts.reduce((accumulator, post) => {
 			const key = post.author?.username || 'Unknown';
@@ -739,13 +759,14 @@ const AdminDashboard = () => {
 										<div>
 											<div className="flex items-center justify-between gap-3 mb-2">
 												<p className="text-sm text-slate-300">This Week</p>
-												<p className="text-lg font-bold text-cyan-300">
+												<p
+													className={`text-lg font-bold ${thisWeekPosts > prevWeekPosts ? 'text-green-400' : thisWeekPosts < prevWeekPosts ? 'text-red-400' : 'text-slate-300'}`}>
 													{thisWeekPosts}
 												</p>
 											</div>
 											<div className="h-2 rounded-full bg-white/5">
 												<div
-													className="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500"
+													className={`h-2 rounded-full ${thisWeekPosts > prevWeekPosts ? 'bg-gradient-to-r from-green-500 to-green-400' : thisWeekPosts < prevWeekPosts ? 'bg-gradient-to-r from-red-500 to-red-400' : 'bg-gradient-to-r from-slate-500 to-slate-400'}`}
 													style={{
 														width: `${Math.max(20, Math.min(100, (thisWeekPosts / Math.max(thisWeekPosts, prevWeekPosts, 5)) * 100))}%`,
 													}}
@@ -755,13 +776,14 @@ const AdminDashboard = () => {
 										<div>
 											<div className="flex items-center justify-between gap-3 mb-2">
 												<p className="text-sm text-slate-300">Last Week</p>
-												<p className="text-lg font-bold text-emerald-300">
+												<p
+													className={`text-lg font-bold ${prevWeekPosts > thisWeekPosts ? 'text-green-400' : prevWeekPosts < thisWeekPosts ? 'text-red-400' : 'text-slate-300'}`}>
 													{prevWeekPosts}
 												</p>
 											</div>
 											<div className="h-2 rounded-full bg-white/5">
 												<div
-													className="h-2 rounded-full bg-gradient-to-r from-emerald-500 to-green-500"
+													className={`h-2 rounded-full ${prevWeekPosts > thisWeekPosts ? 'bg-gradient-to-r from-green-500 to-green-400' : prevWeekPosts < thisWeekPosts ? 'bg-gradient-to-r from-red-500 to-red-400' : 'bg-gradient-to-r from-slate-500 to-slate-400'}`}
 													style={{
 														width: `${Math.max(20, Math.min(100, (prevWeekPosts / Math.max(thisWeekPosts, prevWeekPosts, 5)) * 100))}%`,
 													}}
@@ -804,26 +826,35 @@ const AdminDashboard = () => {
 										Activity Pace (Last 4 Months)
 									</p>
 									<div className="mt-4 flex items-end justify-center gap-3 h-32">
-										{monthlyBreakdown.map((item) => (
-											<div
-												key={item.label}
-												className="flex flex-col items-center gap-2 flex-1">
-												<div className="flex h-24 w-full items-end justify-center rounded-lg bg-white/5 px-1 pb-2">
-													<div
-														className="w-full rounded-md bg-gradient-to-t from-cyan-500 to-purple-500 transition-all"
-														style={{
-															height: `${Math.max(8, (item.count / busiestMonthCount) * 88)}px`,
-														}}
-													/>
+										{monthlyBreakdown.map((item) => {
+											const barClass =
+												monthlyColorMap[item.label] ||
+												'bg-gradient-to-t from-slate-500 to-slate-400';
+											return (
+												<div
+													key={item.label}
+													className="flex flex-col items-center gap-2 flex-1">
+													<div className="flex h-24 w-full items-end justify-center rounded-lg bg-white/5 px-1 pb-2">
+														<div
+															className={
+																'w-full rounded-md ' +
+																barClass +
+																' transition-all'
+															}
+															style={{
+																height: `${Math.max(8, (item.count / busiestMonthCount) * 88)}px`,
+															}}
+														/>
+													</div>
+													<p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+														{item.label}
+													</p>
+													<p className="text-sm font-bold text-white">
+														{item.count}
+													</p>
 												</div>
-												<p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-													{item.label}
-												</p>
-												<p className="text-sm font-bold text-white">
-													{item.count}
-												</p>
-											</div>
-										))}
+											);
+										})}
 									</div>
 								</div>
 							</div>

@@ -92,15 +92,15 @@ const Footer = () => {
 								},
 								{
 									icon: <FaInstagram color="#E4405F" />,
-									link: 'https://instagram.com/newgenlatest',
+									link: 'https://instagram.com/newgenlatestnews',
 								},
 								{
 									icon: <FaLinkedin color="#0A66C2" />,
-									link: 'https://linkedin.com/company/newgenlatest',
+									link: 'https://linkedin.com/company/newgenlatestnews',
 								},
 								{
 									icon: <FaYoutube color="#FF0000" />,
-									link: 'https://youtube.com/@newgenlatest',
+									link: 'https://youtube.com/@newgenlatestnews',
 								},
 							].map((social, idx) => (
 								<a

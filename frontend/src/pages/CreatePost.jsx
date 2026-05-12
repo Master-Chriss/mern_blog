@@ -41,25 +41,25 @@ export default function CreatePost() {
 		e.preventDefault();
 		if (isSubmitting) return;
 
-			if (!title.trim() || !summary.trim() || !content.trim()) {
-				const errorMsg =
-					'Please fill in the title, summary, and article content before publishing.';
-				setError(errorMsg);
-				toast.error(errorMsg);
-				return;
-			}
+		if (!title.trim() || !summary.trim() || !content.trim()) {
+			const errorMsg =
+				'Please fill in the title, summary, and article content before publishing.';
+			setError(errorMsg);
+			toast.error(errorMsg);
+			return;
+		}
 
-			if (!category) {
-				const errorMsg = 'Please choose a category before publishing.';
-				setError(errorMsg);
-				toast.error(errorMsg);
-				return;
-			}
+		if (!category) {
+			const errorMsg = 'Please choose a category before publishing.';
+			setError(errorMsg);
+			toast.error(errorMsg);
+			return;
+		}
 
-			const parsedTags = parseTagInput(tagInput);
+		const parsedTags = parseTagInput(tagInput);
 
-			if (!files?.[0]) {
-				const errorMsg = 'Please upload a cover image before publishing.';
+		if (!files?.[0]) {
+			const errorMsg = 'Please upload a cover image before publishing.';
 			setError(errorMsg);
 			toast.error(errorMsg);
 			return;
@@ -67,15 +67,15 @@ export default function CreatePost() {
 
 		setIsSubmitting(true);
 		setError('');
-			const data = new FormData();
-			data.set('title', title);
-			data.set('summary', summary);
-			data.set('content', content);
-			data.set('category', category);
-			data.set('tags', parsedTags.join(','));
-			if (files?.[0]) {
-				data.set('file', files[0]);
-			}
+		const data = new FormData();
+		data.set('title', title);
+		data.set('summary', summary);
+		data.set('content', content);
+		data.set('category', category);
+		data.set('tags', parsedTags.join(','));
+		if (files?.[0]) {
+			data.set('file', files[0]);
+		}
 
 		try {
 			const response = await fetch(`${API_URL}/post`, {
@@ -119,48 +119,49 @@ export default function CreatePost() {
 					onChange={(ev) => setTitle(ev.target.value)}
 				/>
 
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-						{/* Summary - Glass Card */}
-						<div className="md:col-span-2 space-y-4">
-							<textarea
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					{/* Summary - Glass Card */}
+					<div className="md:col-span-2 space-y-4">
+						<textarea
 							placeholder="What's this story about?"
 							className="w-full h-32 p-6 rounded-3xl bg-white/5 border border-white/10 text-slate-300 placeholder-slate-500 outline-none focus:bg-white/10 transition-all resize-none"
 							value={summary}
-								onChange={(ev) => setSummary(ev.target.value)}
+							onChange={(ev) => setSummary(ev.target.value)}
+						/>
+						<div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+							<label className="mb-2 block text-xs uppercase tracking-[0.25em] text-slate-500">
+								Category
+							</label>
+							<select
+								value={category}
+								onChange={(ev) => setCategory(ev.target.value)}
+								className="w-full rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400">
+								{POST_CATEGORIES.filter((item) => item !== 'All').map(
+									(item) => (
+										<option key={item} value={item}>
+											{item}
+										</option>
+									),
+								)}
+							</select>
+						</div>
+						<div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+							<label className="mb-2 block text-xs uppercase tracking-[0.25em] text-slate-500">
+								Tags <span className="text-cyan-400">*Recommended</span>
+							</label>
+							<input
+								type="text"
+								value={tagInput}
+								onChange={(ev) => setTagInput(ev.target.value)}
+								placeholder="React, Node.js, Premier League"
+								className="w-full rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400"
 							/>
-							<div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-								<label className="mb-2 block text-xs uppercase tracking-[0.25em] text-slate-500">
-									Category
-								</label>
-								<select
-									value={category}
-									onChange={(ev) => setCategory(ev.target.value)}
-									className="w-full rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400">
-									{POST_CATEGORIES.filter((item) => item !== 'All').map(
-										(item) => (
-											<option key={item} value={item}>
-												{item}
-											</option>
-										),
-									)}
-									</select>
-								</div>
-								<div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-									<label className="mb-2 block text-xs uppercase tracking-[0.25em] text-slate-500">
-										Tags
-									</label>
-									<input
-										type="text"
-										value={tagInput}
-										onChange={(ev) => setTagInput(ev.target.value)}
-										placeholder="React, Node.js, Premier League"
-										className="w-full rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400"
-									/>
-									<p className="mt-2 text-xs text-slate-500">
-										Use commas between tags. Up to 8 tags.
-									</p>
-								</div>
-							</div>
+							<p className="mt-2 text-xs text-slate-500">
+								Use commas between tags. Up to 8 tags. Tags help readers
+								discover your content through tag archives.
+							</p>
+						</div>
+					</div>
 
 					{/* File Upload - Styled as a Dropzone */}
 					<div className="relative group h-32 md:h-full">

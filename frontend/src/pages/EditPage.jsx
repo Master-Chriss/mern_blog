@@ -66,7 +66,8 @@ const EditPage = () => {
 
 				// Check permissions
 				const userIsAdmin = userInfo?.role === 'admin';
-				const userIsAuthor = String(userInfo?.id) === String(postInfo.author._id);
+				const userIsAuthor =
+					String(userInfo?.id) === String(postInfo.author._id);
 
 				if (!userIsAdmin && !userIsAuthor) {
 					setUnauthorizedError('You are not authorized to edit this post');
@@ -231,7 +232,7 @@ const EditPage = () => {
 
 							<div className="rounded-[2rem] border border-white/10 bg-[#1a1b4b]/30 p-5">
 								<label className="mb-2 block text-xs uppercase tracking-[0.25em] text-slate-500">
-									Tags
+									Tags <span className="text-cyan-400">*Recommended</span>
 								</label>
 								<input
 									type="text"
@@ -241,7 +242,8 @@ const EditPage = () => {
 									className="w-full rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400"
 								/>
 								<p className="mt-2 text-xs text-slate-500">
-									Use commas between tags. Up to 8 tags.
+									Use commas between tags. Up to 8 tags. Tags help readers
+									discover your content through tag archives.
 								</p>
 							</div>
 						</div>

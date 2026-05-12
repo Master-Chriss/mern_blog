@@ -99,7 +99,7 @@ export default function Post({
 								{tags.slice(0, 3).map((tag) => (
 									<Link
 										key={tag}
-										to={`/tag/${slugifyValue(tag)}`}
+										to={`#`}
 										className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
 										#{tag}
 									</Link>

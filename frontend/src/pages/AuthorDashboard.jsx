@@ -1,7 +1,8 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
-import { Navigate, Link, useLocation } from 'react-router-dom';
+import { Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
+	ArrowLeft,
 	Bell,
 	CalendarDays,
 	ChartColumn,
@@ -83,20 +84,21 @@ const formatRelativeTime = (value) => {
 const AuthorDashboard = () => {
 	const { userInfo } = useContext(UserContext);
 	const location = useLocation();
+	const navigate = useNavigate();
 
-		const [posts, setPosts] = useState([]);
-		const [inboxData, setInboxData] = useState({
-			activities: [],
-			summary: {
-				totalReaderMessages: 0,
-				recentReaderMessages: 0,
-				activePosts: 0,
-				uniqueReaders: 0,
-			},
-		});
-		const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-		const [search, setSearch] = useState('');
-		const [currentPage, setCurrentPage] = useState(1);
+	const [posts, setPosts] = useState([]);
+	const [inboxData, setInboxData] = useState({
+		activities: [],
+		summary: {
+			totalReaderMessages: 0,
+			recentReaderMessages: 0,
+			activePosts: 0,
+			uniqueReaders: 0,
+		},
+	});
+	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+	const [search, setSearch] = useState('');
+	const [currentPage, setCurrentPage] = useState(1);
 	const [pendingAction, setPendingAction] = useState(null);
 	const [isConfirmingAction, setIsConfirmingAction] = useState(false);
 
@@ -224,7 +226,9 @@ const AuthorDashboard = () => {
 			(now.getTime() - new Date(post.createdAt).getTime()) / 86400000;
 		return ageInDays > 21;
 	}).length;
-	const postsWithoutCategoryCount = myPosts.filter((post) => !post.category).length;
+	const postsWithoutCategoryCount = myPosts.filter(
+		(post) => !post.category,
+	).length;
 
 	const recentPosts = [...myPosts]
 		.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -274,9 +278,9 @@ const AuthorDashboard = () => {
 		? Math.round((dominantCategory[1] / Math.max(myPosts.length, 1)) * 100)
 		: 0;
 
-		const editorialReminders = [
-			{
-				title: 'Refresh older stories',
+	const editorialReminders = [
+		{
+			title: 'Refresh older stories',
 			description:
 				olderPostsCount > 0
 					? `${olderPostsCount} posts are older than three weeks and could use a refresh, repost, or follow-up article.`
@@ -295,8 +299,8 @@ const AuthorDashboard = () => {
 				dominantCategory && dominantCategoryShare >= 60
 					? `${dominantCategory[0]} accounts for ${dominantCategoryShare}% of your posts. A new category could broaden your feed.`
 					: 'Your current category mix looks reasonably balanced for the posts available.',
-			},
-		];
+		},
+	];
 
 	const planItems = [
 		{
@@ -502,7 +506,7 @@ const AuthorDashboard = () => {
 						);
 					})}
 				</nav>
-        
+
 				<button className="mt-6 flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-300 transition hover:bg-white/5 hover:text-red-400">
 					<LogOut size={18} /> Logout
 				</button>
@@ -514,11 +518,20 @@ const AuthorDashboard = () => {
 						<section className="rounded-[2rem] bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6 lg:p-8">
 							<div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
 								<div className="flex items-start gap-3 sm:gap-4">
-									<button
-										onClick={() => setIsSidebarOpen(true)}
-										className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white/5 text-xl text-white md:hidden">
-										<Menu size={20} />
-									</button>
+									<div className="flex h-11 w-11 flex-shrink-0 items-center justify-center">
+										<button
+											onClick={() => setIsSidebarOpen(true)}
+											className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white/5 text-xl text-white md:hidden">
+											<Menu size={20} />
+										</button>
+										{location.hash && (
+											<button
+												onClick={() => navigate('/author')}
+												className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/5 text-white transition hover:bg-white/10">
+												<ArrowLeft size={20} />
+											</button>
+										)}
+									</div>
 									<div>
 										<p className="text-xs uppercase tracking-[0.28em] text-cyan-300/80">
 											Author Dashboard
@@ -562,7 +575,8 @@ const AuthorDashboard = () => {
 										</span>
 										<p>{card.label}</p>
 									</div>
-									<p className={`mt-5 text-3xl font-bold sm:text-4xl ${card.valueClassName}`}>
+									<p
+										className={`mt-5 text-3xl font-bold sm:text-4xl ${card.valueClassName}`}>
 										{card.value}
 									</p>
 								</div>
@@ -573,12 +587,16 @@ const AuthorDashboard = () => {
 							<div className="rounded-[2rem] bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
 								<div className="mb-6 flex items-end justify-between gap-4">
 									<div>
-										<h2 className="text-2xl font-bold text-white">Latest Articles</h2>
+										<h2 className="text-2xl font-bold text-white">
+											Latest Articles
+										</h2>
 										<p className="mt-2 text-sm text-slate-400">
 											Your freshest stories and their quick actions.
 										</p>
 									</div>
-									<p className="text-sm text-slate-500">{recentPosts.length} shown</p>
+									<p className="text-sm text-slate-500">
+										{recentPosts.length} shown
+									</p>
 								</div>
 
 								<div className="space-y-3">
@@ -621,14 +639,16 @@ const AuthorDashboard = () => {
 									))}
 									{myPosts.length === 0 && (
 										<div className="rounded-[1.35rem] bg-slate-900/40 px-4 py-6 text-sm text-slate-400">
-											No posts yet. Your first article will appear here as soon as
-											you publish it.
+											No posts yet. Your first article will appear here as soon
+											as you publish it.
 										</div>
 									)}
 								</div>
 							</div>
 
-							<div id="articles" className="rounded-[2rem] bg-white/5 shadow-xl shadow-black/10 backdrop-blur-xl">
+							<div
+								id="articles"
+								className="rounded-[2rem] bg-white/5 shadow-xl shadow-black/10 backdrop-blur-xl">
 								<div className="flex flex-col gap-4 p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
 									<div>
 										<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
@@ -722,12 +742,16 @@ const AuthorDashboard = () => {
 													key={post._id}
 													className="text-sm text-slate-300 transition hover:bg-white/5">
 													<td className="px-6 py-4">
-														<p className="font-medium text-white">{post.title}</p>
+														<p className="font-medium text-white">
+															{post.title}
+														</p>
 														<p className="mt-1 line-clamp-2 text-xs text-slate-500">
 															{post.summary}
 														</p>
 													</td>
-													<td className="px-6 py-4">{post.category || 'General'}</td>
+													<td className="px-6 py-4">
+														{post.category || 'General'}
+													</td>
 													<td className="px-6 py-4">
 														<div className="flex flex-wrap gap-2">
 															{(post.tags || []).length > 0 ? (
@@ -773,13 +797,16 @@ const AuthorDashboard = () => {
 
 								<div className="flex flex-col gap-4 px-4 pb-4 pt-2 text-sm text-slate-400 sm:px-6 sm:pb-6 lg:flex-row lg:items-center lg:justify-between">
 									<p>
-										Showing {paginatedPosts.length} of {filteredPosts.length} posts
+										Showing {paginatedPosts.length} of {filteredPosts.length}{' '}
+										posts
 									</p>
 
 									<div className="flex flex-wrap gap-2">
 										<button
 											type="button"
-											onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+											onClick={() =>
+												setCurrentPage((prev) => Math.max(prev - 1, 1))
+											}
 											disabled={currentPage === 1}
 											className="rounded-xl bg-white/5 px-3 py-2 text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-40">
 											Previous
@@ -803,7 +830,9 @@ const AuthorDashboard = () => {
 										<button
 											type="button"
 											onClick={() =>
-												setCurrentPage((prev) => Math.min(prev + 1, totalPages || 1))
+												setCurrentPage((prev) =>
+													Math.min(prev + 1, totalPages || 1),
+												)
 											}
 											disabled={currentPage === totalPages || totalPages === 0}
 											className="rounded-xl bg-white/5 px-3 py-2 text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-40">
@@ -813,7 +842,9 @@ const AuthorDashboard = () => {
 								</div>
 							</div>
 
-							<div id="analytics" className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
+							<div
+								id="analytics"
+								className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
 								<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
 									<ChartColumn size={24} /> Analytics
 								</h2>
@@ -841,10 +872,14 @@ const AuthorDashboard = () => {
 													Top Tag
 												</p>
 												<p className="mt-3 text-lg font-semibold text-white">
-													{topTags[0]?.[0] ? `#${topTags[0][0]}` : 'No tags yet'}
+													{topTags[0]?.[0]
+														? `#${topTags[0][0]}`
+														: 'No tags yet'}
 												</p>
 												<p className="mt-1 text-sm text-slate-400">
-													{topTags[0] ? `${topTags[0][1]} uses` : 'Tag your stories'}
+													{topTags[0]
+														? `${topTags[0][1]} uses`
+														: 'Tag your stories'}
 												</p>
 											</div>
 											<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
@@ -883,7 +918,8 @@ const AuthorDashboard = () => {
 																	style={{
 																		width: `${Math.max(
 																			16,
-																			(count / Math.max(myPosts.length, 1)) * 100,
+																			(count / Math.max(myPosts.length, 1)) *
+																				100,
 																		)}%`,
 																	}}
 																/>
@@ -892,7 +928,8 @@ const AuthorDashboard = () => {
 													))
 												) : (
 													<p className="text-sm text-slate-400">
-														Your category mix will appear once you publish a few stories.
+														Your category mix will appear once you publish a few
+														stories.
 													</p>
 												)}
 											</div>
@@ -921,26 +958,32 @@ const AuthorDashboard = () => {
 														<p className="mt-3 text-xs uppercase tracking-[0.18em] text-slate-500">
 															{item.label}
 														</p>
-														<p className="mt-1 text-sm text-white">{item.count}</p>
+														<p className="mt-1 text-sm text-white">
+															{item.count}
+														</p>
 													</div>
 												))}
 											</div>
 										</div>
 
 										<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-											<p className="text-sm font-semibold text-white">Top Tags</p>
+											<p className="text-sm font-semibold text-white">
+												Top Tags
+											</p>
 											<div className="mt-4 flex flex-wrap gap-2">
 												{topTags.length > 0 ? (
 													topTags.map(([tag, count]) => (
 														<span
 															key={tag}
 															className="rounded-full bg-white/5 px-3 py-2 text-sm text-cyan-200">
-															#{tag} <span className="text-slate-400">{count}</span>
+															#{tag}{' '}
+															<span className="text-slate-400">{count}</span>
 														</span>
 													))
 												) : (
 													<p className="text-sm text-slate-400">
-														No tag trends yet. Add tags to your posts to build a stronger discovery map.
+														No tag trends yet. Add tags to your posts to build a
+														stronger discovery map.
 													</p>
 												)}
 											</div>
@@ -950,16 +993,21 @@ const AuthorDashboard = () => {
 							</div>
 
 							<div className="grid gap-6 xl:grid-cols-2">
-								<div id="plan" className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
+								<div
+									id="plan"
+									className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
 									<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
 										<CalendarDays size={24} /> Post Plan
 									</h2>
 									<p className="mt-2 text-sm text-slate-400">
-										Use your current content patterns to choose the next best move.
+										Use your current content patterns to choose the next best
+										move.
 									</p>
 									<div className="mt-6 grid gap-3 sm:grid-cols-2">
 										{planItems.map((item) => (
-											<div key={item.label} className="rounded-[1.35rem] bg-slate-900/40 p-4">
+											<div
+												key={item.label}
+												className="rounded-[1.35rem] bg-slate-900/40 p-4">
 												<p className="text-xs uppercase tracking-[0.25em] text-slate-500">
 													{item.label}
 												</p>
@@ -971,12 +1019,15 @@ const AuthorDashboard = () => {
 									</div>
 								</div>
 
-								<div id="inbox" className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
+								<div
+									id="inbox"
+									className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
 									<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
 										<Bell size={24} /> Inbox
 									</h2>
 									<p className="mt-2 text-sm text-slate-400">
-										Reader activity on your posts, plus a smaller editorial reminder stream for follow-up work.
+										Reader activity on your posts, plus a smaller editorial
+										reminder stream for follow-up work.
 									</p>
 									<div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
 										<div>
@@ -1050,7 +1101,8 @@ const AuthorDashboard = () => {
 													))
 												) : (
 													<div className="rounded-[1.35rem] bg-slate-900/40 p-4 text-sm leading-6 text-slate-400">
-														No reader activity yet. New comments on your posts will start appearing here.
+														No reader activity yet. New comments on your posts
+														will start appearing here.
 													</div>
 												)}
 											</div>
@@ -1066,7 +1118,9 @@ const AuthorDashboard = () => {
 												</p>
 											</div>
 											{editorialReminders.map((alert) => (
-												<div key={alert.title} className="rounded-[1.35rem] bg-slate-900/40 p-4">
+												<div
+													key={alert.title}
+													className="rounded-[1.35rem] bg-slate-900/40 p-4">
 													<p className="text-sm font-semibold text-white">
 														{alert.title}
 													</p>
@@ -1080,7 +1134,9 @@ const AuthorDashboard = () => {
 								</div>
 							</div>
 
-							<div id="settings" className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
+							<div
+								id="settings"
+								className="rounded-[2rem] bg-white/5 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
 								<h2 className="flex items-center gap-2 text-2xl font-bold text-white">
 									<Settings size={24} /> Settings
 								</h2>
@@ -1091,19 +1147,24 @@ const AuthorDashboard = () => {
 									<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
 										<p className="text-sm font-semibold text-white">Profile</p>
 										<p className="mt-2 text-sm leading-6 text-slate-400">
-											Keep your author identity clear so readers recognize your work instantly.
+											Keep your author identity clear so readers recognize your
+											work instantly.
 										</p>
 									</div>
 									<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
-										<p className="text-sm font-semibold text-white">Content Quality</p>
+										<p className="text-sm font-semibold text-white">
+											Content Quality
+										</p>
 										<p className="mt-2 text-sm leading-6 text-slate-400">
-											Add tags consistently and keep category choices intentional.
+											Add tags consistently and keep category choices
+											intentional.
 										</p>
 									</div>
 									<div className="rounded-[1.35rem] bg-slate-900/40 p-4">
 										<p className="text-sm font-semibold text-white">Workflow</p>
 										<p className="mt-2 text-sm leading-6 text-slate-400">
-											Use the dashboard to review, refine, and publish from a single place.
+											Use the dashboard to review, refine, and publish from a
+											single place.
 										</p>
 									</div>
 								</div>

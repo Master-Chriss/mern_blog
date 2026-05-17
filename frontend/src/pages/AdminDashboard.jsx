@@ -1,7 +1,8 @@
 ﻿import { useContext, useEffect, useMemo, useState } from 'react';
-import { Navigate, Link, useLocation } from 'react-router-dom';
+import { Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
+	ArrowLeft,
 	CalendarDays,
 	ChartColumn,
 	FileText,
@@ -86,6 +87,7 @@ const readJsonResponse = async (response, fallbackMessage) => {
 const AdminDashboard = () => {
 	const { userInfo, setUserInfo } = useContext(UserContext);
 	const location = useLocation();
+	const navigate = useNavigate();
 
 	const [users, setUsers] = useState([]);
 	const [posts, setPosts] = useState([]);
@@ -680,11 +682,20 @@ const AdminDashboard = () => {
 						<section className="rounded-[2rem] bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6 lg:p-8">
 							<div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
 								<div className="flex items-start gap-3 sm:gap-4">
-									<button
-										onClick={() => setIsSidebarOpen(true)}
-										className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white/5 text-xl text-white md:hidden">
-										<Menu size={20} />
-									</button>
+									<div className="flex h-11 w-11 flex-shrink-0 items-center justify-center">
+										<button
+											onClick={() => setIsSidebarOpen(true)}
+											className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white/5 text-xl text-white md:hidden">
+											<Menu size={20} />
+										</button>
+										{location.pathname !== '/admin' && (
+											<button
+												onClick={() => navigate('/admin')}
+												className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/5 text-white transition hover:bg-white/10">
+												<ArrowLeft size={20} />
+											</button>
+										)}
+									</div>
 									<div>
 										<p className="text-xs uppercase tracking-[0.28em] text-cyan-300/80">
 											Admin Dashboard

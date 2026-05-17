@@ -1,13 +1,15 @@
 import { useContext, useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
+	ArrowLeft,
 	ChevronDown,
 	Menu,
 	PenSquare,
 	Search,
 	Trash2,
-	X, Loader
+	X,
+	Loader,
 } from 'lucide-react';
 import { UserContext } from '../UserContext';
 import ConfirmationDialog from '../components/ConfirmationDialog';
@@ -27,6 +29,7 @@ const formatDisplayDate = (value) => {
 
 const MyArticles = () => {
 	const { userInfo } = useContext(UserContext);
+	const navigate = useNavigate();
 	const [posts, setPosts] = useState([]);
 	const [search, setSearch] = useState('');
 	const [sortBy, setSortBy] = useState('newest');
@@ -68,8 +71,10 @@ const MyArticles = () => {
 				post.author?.username.toLowerCase().includes(search.toLowerCase()),
 		)
 		.sort((a, b) => {
-			if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
-			if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
+			if (sortBy === 'newest')
+				return new Date(b.createdAt) - new Date(a.createdAt);
+			if (sortBy === 'oldest')
+				return new Date(a.createdAt) - new Date(b.createdAt);
 			if (sortBy === 'title') return a.title.localeCompare(b.title);
 			return 0;
 		});
@@ -158,11 +163,18 @@ const MyArticles = () => {
 						<section className="rounded-[2rem] bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6 lg:p-8">
 							<div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
 								<div className="flex items-start gap-3 sm:gap-4">
-									<button
-										onClick={() => setIsSidebarOpen(true)}
-										className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white/5 text-xl text-white md:hidden">
-										<Menu size={20} />
-									</button>
+									<div className="flex h-11 w-11 flex-shrink-0 items-center justify-center">
+										<button
+											onClick={() => setIsSidebarOpen(true)}
+											className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white/5 text-xl text-white md:hidden">
+											<Menu size={20} />
+										</button>
+										<button
+											onClick={() => navigate('/admin')}
+											className="hidden h-11 w-11 items-center justify-center rounded-2xl bg-white/5 text-white transition hover:bg-white/10 md:inline-flex">
+											<ArrowLeft size={20} />
+										</button>
+									</div>
 									<div>
 										<p className="text-xs uppercase tracking-[0.28em] text-cyan-300/80">
 											Article Management
@@ -171,7 +183,8 @@ const MyArticles = () => {
 											My Articles
 										</h1>
 										<p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-											Create, edit, and manage all your published posts in one place.
+											Create, edit, and manage all your published posts in one
+											place.
 										</p>
 									</div>
 								</div>
@@ -188,9 +201,12 @@ const MyArticles = () => {
 						<section className="mt-6 rounded-[2rem] bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
 							<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 								<div>
-									<h2 className="text-2xl font-bold text-white">All Articles</h2>
+									<h2 className="text-2xl font-bold text-white">
+										All Articles
+									</h2>
 									<p className="mt-2 text-sm text-slate-400">
-										{filteredPosts.length} article{filteredPosts.length !== 1 ? 's' : ''}
+										{filteredPosts.length} article
+										{filteredPosts.length !== 1 ? 's' : ''}
 									</p>
 								</div>
 
@@ -246,11 +262,7 @@ const MyArticles = () => {
 											<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
 												<div className="flex min-w-0 flex-1 items-start gap-3">
 													<span className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white/5 text-base font-bold text-slate-500">
-														{(
-															(currentPage - 1) * ARTICLES_PER_PAGE +
-															index +
-															1
-														)
+														{((currentPage - 1) * ARTICLES_PER_PAGE + index + 1)
 															.toString()
 															.padStart(2, '0')}
 													</span>
@@ -290,7 +302,9 @@ const MyArticles = () => {
 								</div>
 							) : (
 								<div className="rounded-[1.35rem] bg-slate-900/40 px-4 py-8 text-center text-slate-400">
-									{search ? 'No articles match your search.' : 'No articles yet. Create your first one!'}
+									{search
+										? 'No articles match your search.'
+										: 'No articles yet. Create your first one!'}
 								</div>
 							)}
 
@@ -298,7 +312,9 @@ const MyArticles = () => {
 								<div className="mt-6 flex flex-wrap gap-2">
 									<button
 										type="button"
-										onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+										onClick={() =>
+											setCurrentPage((prev) => Math.max(prev - 1, 1))
+										}
 										disabled={currentPage === 1}
 										className="rounded-xl bg-white/5 px-3 py-2 text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-40">
 										Previous
@@ -322,7 +338,9 @@ const MyArticles = () => {
 									<button
 										type="button"
 										onClick={() =>
-											setCurrentPage((prev) => Math.min(prev + 1, totalPages || 1))
+											setCurrentPage((prev) =>
+												Math.min(prev + 1, totalPages || 1),
+											)
 										}
 										disabled={currentPage === totalPages || totalPages === 0}
 										className="rounded-xl bg-white/5 px-3 py-2 text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-40">

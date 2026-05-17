@@ -1,13 +1,14 @@
 import { useContext, useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Wallet, Menu, Loader } from 'lucide-react';
+import { ArrowLeft, Wallet, Menu, Loader } from 'lucide-react';
 import { UserContext } from '../UserContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const Earnings = () => {
 	const { userInfo } = useContext(UserContext);
+	const navigate = useNavigate();
 	const [posts, setPosts] = useState([]);
 	const [users, setUsers] = useState([]);
 	const [newsletterStats, setNewsletterStats] = useState({
@@ -146,11 +147,18 @@ const Earnings = () => {
 					<div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
 						<section className="rounded-[2rem] bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6 lg:p-8">
 							<div className="flex items-start gap-3 sm:gap-4">
-								<button
-									onClick={() => setIsSidebarOpen(true)}
-									className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white/5 text-xl text-white md:hidden">
-									<Menu size={20} />
-								</button>
+								<div className="flex h-11 w-11 flex-shrink-0 items-center justify-center">
+									<button
+										onClick={() => setIsSidebarOpen(true)}
+										className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white/5 text-xl text-white md:hidden">
+										<Menu size={20} />
+									</button>
+									<button
+										onClick={() => navigate('/admin')}
+										className="hidden h-11 w-11 items-center justify-center rounded-2xl bg-white/5 text-white transition hover:bg-white/10 md:inline-flex">
+										<ArrowLeft size={20} />
+									</button>
+								</div>
 								<div>
 									<p className="text-xs uppercase tracking-[0.28em] text-cyan-300/80">
 										Revenue Potential
